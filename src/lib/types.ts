@@ -1,0 +1,202 @@
+export interface GameProject {
+  id: string
+  title: string
+  description: string
+  prompt: string
+  status: 'concept' | 'development' | 'testing' | 'complete'
+  progress: number
+  createdAt: string
+  updatedAt: string
+  thumbnail?: string
+  pipeline: PipelineStage[]
+  story?: StoryContent
+  assets?: AssetCollection
+  gameplay?: GameplayContent
+  qa?: QAContent
+  publishing?: PublishingContent
+}
+
+export interface PipelineStage {
+  id: string
+  name: string
+  status: 'pending' | 'in-progress' | 'complete' | 'blocked'
+  progress: number
+  order: number
+  dependencies?: string[]
+  estimatedHours?: number
+  actualHours?: number
+}
+
+export interface StoryContent {
+  genre: string
+  setting: string
+  characters: Character[]
+  plotOutline: string
+  themes: string[]
+  targetAudience: string
+}
+
+export interface Character {
+  id: string
+  name: string
+  role: 'protagonist' | 'antagonist' | 'supporting' | 'npc'
+  description: string
+  backstory?: string
+  attributes?: Record<string, any>
+}
+
+export interface AssetCollection {
+  art: ArtAsset[]
+  audio: AudioAsset[]
+  models: ModelAsset[]
+}
+
+export interface ArtAsset {
+  id: string
+  name: string
+  type: 'concept' | 'sprite' | 'texture' | 'ui' | 'environment'
+  status: 'requested' | 'in-progress' | 'review' | 'approved'
+  thumbnail?: string
+  tags: string[]
+}
+
+export interface AudioAsset {
+  id: string
+  name: string
+  type: 'music' | 'sfx' | 'voice' | 'ambient'
+  status: 'requested' | 'in-progress' | 'review' | 'approved'
+  duration?: number
+  tags: string[]
+}
+
+export interface ModelAsset {
+  id: string
+  name: string
+  type: '2d' | '3d' | 'animation'
+  status: 'requested' | 'in-progress' | 'review' | 'approved'
+  polyCount?: number
+  tags: string[]
+}
+
+export interface GameplayContent {
+  mechanics: GameMechanic[]
+  levels: Level[]
+  balancing: BalanceConfig
+}
+
+export interface GameMechanic {
+  id: string
+  name: string
+  description: string
+  complexity: 'simple' | 'medium' | 'complex'
+  implemented: boolean
+  dependencies?: string[]
+}
+
+export interface Level {
+  id: string
+  name: string
+  difficulty: number
+  objectives: string[]
+  mechanics: string[]
+  estimated_playtime: number
+  status: 'design' | 'prototype' | 'complete'
+}
+
+export interface BalanceConfig {
+  difficulty_curve: number[]
+  player_progression: Record<string, any>
+  economy?: Record<string, any>
+}
+
+export interface QAContent {
+  testPlans: TestPlan[]
+  bugs: Bug[]
+  metrics: QAMetrics
+}
+
+export interface TestPlan {
+  id: string
+  name: string
+  type: 'functional' | 'performance' | 'usability' | 'compatibility'
+  status: 'planned' | 'in-progress' | 'complete'
+  testCases: TestCase[]
+}
+
+export interface TestCase {
+  id: string
+  description: string
+  steps: string[]
+  expected: string
+  status: 'pass' | 'fail' | 'blocked' | 'pending'
+}
+
+export interface Bug {
+  id: string
+  title: string
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  status: 'open' | 'in-progress' | 'resolved' | 'closed'
+  description: string
+  steps: string[]
+  assignee?: string
+}
+
+export interface QAMetrics {
+  test_coverage: number
+  bug_count: number
+  resolved_bugs: number
+  performance_score: number
+}
+
+export interface PublishingContent {
+  platforms: Platform[]
+  marketing: MarketingContent
+  distribution: DistributionPlan
+  monetization: MonetizationStrategy
+}
+
+export interface Platform {
+  id: string
+  name: string
+  status: 'planned' | 'development' | 'submitted' | 'published'
+  requirements: string[]
+  certification_status?: string
+}
+
+export interface MarketingContent {
+  tagline: string
+  description: string
+  screenshots: string[]
+  trailer?: string
+  key_features: string[]
+  target_demographics: string[]
+}
+
+export interface DistributionPlan {
+  release_date?: string
+  pricing_strategy: 'free' | 'premium' | 'freemium' | 'subscription'
+  launch_strategy: string[]
+  post_launch_support: string[]
+}
+
+export interface MonetizationStrategy {
+  model: 'one-time' | 'freemium' | 'subscription' | 'ads' | 'dlc'
+  pricing: Record<string, number>
+  revenue_projections?: Record<string, number>
+}
+
+export interface AIAssistantMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+  context?: 'general' | 'story' | 'assets' | 'gameplay' | 'qa' | 'publishing'
+}
+
+export interface NavigationSection {
+  id: string
+  name: string
+  icon: React.ComponentType
+  path: string
+  badge?: string | number
+}

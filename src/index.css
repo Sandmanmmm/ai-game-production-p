@@ -1,1 +1,182 @@
-/* This is where custom CSS goes */
+@import 'tailwindcss';
+@import "tw-animate-css";
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+}
+
+/* Custom fonts */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* GameForge Theme - Futuristic Creative Studio */
+:root {
+  /* Core colors */
+  --background: oklch(0.08 0.02 240); /* Deep space background */
+  --foreground: oklch(0.98 0 0); /* Pure white text */
+  
+  --card: oklch(0.12 0.03 240); /* Slightly lighter charcoal cards */
+  --card-foreground: oklch(0.92 0.01 240); /* Light gray card text */
+  
+  --popover: oklch(0.15 0.03 240); /* Popup backgrounds */
+  --popover-foreground: oklch(0.95 0.01 240); /* Popup text */
+  
+  /* Primary - Deep Space Blue */
+  --primary: oklch(0.25 0.15 240); /* Deep blue for primary actions */
+  --primary-foreground: oklch(0.98 0 0); /* White text on primary */
+  
+  /* Secondary - Cosmic Purple accents */
+  --secondary: oklch(0.18 0.08 280); /* Muted purple background */
+  --secondary-foreground: oklch(0.85 0.05 280); /* Light purple text */
+  
+  /* Muted backgrounds and text */
+  --muted: oklch(0.14 0.02 240); /* Subtle background variations */
+  --muted-foreground: oklch(0.65 0.02 240); /* Muted text */
+  
+  /* Accent - Electric Gold */
+  --accent: oklch(0.75 0.15 85); /* Bright gold for highlights */
+  --accent-foreground: oklch(0.2 0.1 240); /* Dark text on accent */
+  
+  /* Destructive actions */
+  --destructive: oklch(0.6 0.25 25); /* Warning red */
+  --destructive-foreground: oklch(0.98 0 0); /* White text */
+  
+  /* UI elements */
+  --border: oklch(0.25 0.05 240); /* Subtle borders */
+  --input: oklch(0.22 0.05 240); /* Input field borders */
+  --ring: oklch(0.75 0.15 85); /* Focus rings - gold accent */
+  
+  /* Custom GameForge colors */
+  --cosmic-purple: oklch(0.35 0.2 280); /* Vibrant purple for AI elements */
+  --electric-gold: oklch(0.75 0.15 85); /* Active state gold */
+  --glass-overlay: oklch(0.95 0 0 / 0.1); /* Glassmorphism overlay */
+  
+  /* Radius for modern rounded corners */
+  --radius: 0.75rem;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: var(--glass-overlay);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.95 0 0 / 0.1);
+}
+
+.glass-card {
+  background: oklch(0.12 0.03 240 / 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid oklch(0.4 0.1 240 / 0.2);
+  box-shadow: 
+    0 4px 16px oklch(0 0 0 / 0.3),
+    inset 0 1px 0 oklch(0.95 0 0 / 0.1);
+}
+
+/* Glow effects */
+.glow-gold {
+  box-shadow: 0 0 20px oklch(0.75 0.15 85 / 0.3);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px oklch(0.35 0.2 280 / 0.3);
+}
+
+.glow-blue {
+  box-shadow: 0 0 20px oklch(0.25 0.15 240 / 0.3);
+}
+
+/* Gradient backgrounds */
+.gradient-cosmic {
+  background: linear-gradient(135deg, 
+    oklch(0.25 0.15 240) 0%, 
+    oklch(0.35 0.2 280) 50%, 
+    oklch(0.15 0.08 300) 100%
+  );
+}
+
+.gradient-gold {
+  background: linear-gradient(135deg,
+    oklch(0.75 0.15 85) 0%,
+    oklch(0.65 0.12 70) 100%
+  );
+}
+
+/* Animation keyframes for floating particles */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(120deg); }
+  66% { transform: translateY(5px) rotate(240deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px oklch(0.75 0.15 85 / 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 30px oklch(0.75 0.15 85 / 0.5);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: oklch(0.12 0.03 240);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.2 280);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.2 280);
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  /* Radius system */
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-2xl: calc(var(--radius) * 3);
+  --radius-full: 9999px;
+}
