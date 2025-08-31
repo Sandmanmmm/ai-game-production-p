@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { GameProject, PipelineStage } from '@/lib/types'
 import { PipelineVisualization } from '@/components/PipelineVisualization'
 import { AIAssistant } from '@/components/AIAssistant'
+import { AssetGallery } from '@/components/AssetGallery'
+import { StoryDisplay } from '@/components/StoryDisplay'
+import { GameplayDisplay } from '@/components/GameplayDisplay'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,7 +27,8 @@ import {
   Sparkle,
   Play,
   Pause,
-  Robot
+  Robot,
+  ChartLine
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
@@ -204,109 +208,98 @@ export function ProjectDetailView({ project, onBack }: ProjectDetailViewProps) {
 
               <TabsContent value="story" className="h-full m-0 p-6">
                 <ScrollArea className="h-full custom-scrollbar">
-                  <div className="space-y-6 max-w-4xl">
-                    <h2 className="text-xl font-semibold text-foreground">Story & Narrative</h2>
-                    
-                    {/* Story Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card className="glass-card p-6">
-                        <h3 className="font-semibold text-foreground mb-3">Genre & Setting</h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Genre:</span>
-                            <Badge variant="secondary">{project.story?.genre}</Badge>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Target Audience:</span>
-                            <span className="text-foreground text-sm">{project.story?.targetAudience}</span>
-                          </div>
+                  <div className="space-y-6 max-w-6xl">
+                    {project.story ? (
+                      <StoryDisplay story={project.story} />
+                    ) : (
+                      <Card className="glass-card p-8 text-center space-y-4">
+                        <BookOpen size={48} className="text-muted-foreground mx-auto" />
+                        <div>
+                          <h3 className="text-xl font-semibold text-foreground mb-2">Story Coming Soon</h3>
+                          <p className="text-muted-foreground mb-6">
+                            AI will generate your story, characters, and world-building
+                          </p>
+                          <Button variant="outline" className="gap-2">
+                            <Sparkle size={16} />
+                            Generate Story with AI
+                          </Button>
                         </div>
                       </Card>
-
-                      <Card className="glass-card p-6">
-                        <h3 className="font-semibold text-foreground mb-3">Themes</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {project.story?.themes?.map((theme, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {theme}
-                            </Badge>
-                          ))}
-                        </div>
-                      </Card>
-                    </div>
-
-                    {/* Plot Outline */}
-                    <Card className="glass-card p-6">
-                      <h3 className="font-semibold text-foreground mb-3">Plot Outline</h3>
-                      <p className="text-foreground leading-relaxed">{project.story?.plotOutline}</p>
-                    </Card>
-
-                    {/* Setting */}
-                    <Card className="glass-card p-6">
-                      <h3 className="font-semibold text-foreground mb-3">World & Setting</h3>
-                      <p className="text-foreground leading-relaxed">{project.story?.setting}</p>
-                    </Card>
-
-                    {/* Characters Placeholder */}
-                    <Card className="glass-card p-6">
-                      <h3 className="font-semibold text-foreground mb-3">Characters</h3>
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Users size={48} className="mx-auto mb-3 opacity-50" />
-                        <p>Character development coming soon...</p>
-                        <Button variant="outline" className="mt-4 gap-2">
-                          <Sparkle size={16} />
-                          Generate Characters with AI
-                        </Button>
-                      </div>
-                    </Card>
+                    )}
                   </div>
                 </ScrollArea>
               </TabsContent>
 
               <TabsContent value="assets" className="h-full m-0 p-6">
                 <ScrollArea className="h-full custom-scrollbar">
-                  <div className="space-y-6 max-w-4xl">
-                    <h2 className="text-xl font-semibold text-foreground">Asset Production</h2>
-                    
-                    <div className="text-center py-16 space-y-4">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
-                        <Palette size={40} className="text-accent" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-foreground mb-2">Assets Coming Soon</h3>
-                        <p className="text-muted-foreground mb-6">AI-powered asset generation will help create art, audio, and 3D models for your game</p>
-                        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
-                          <Sparkle size={16} />
-                          Start Asset Production
+                  <div className="space-y-6 max-w-6xl">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-semibold text-foreground">Asset Production</h2>
+                      {project.assets && (project.assets.art.length > 0 || project.assets.audio.length > 0 || project.assets.models.length > 0) && (
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <Sparkle size={14} />
+                          Generate More Assets
                         </Button>
-                      </div>
+                      )}
                     </div>
+                    
+                    {project.assets && (project.assets.art.length > 0 || project.assets.audio.length > 0 || project.assets.models.length > 0) ? (
+                      <AssetGallery
+                        artAssets={project.assets.art}
+                        audioAssets={project.assets.audio}
+                        modelAssets={project.assets.models}
+                      />
+                    ) : (
+                      <Card className="glass-card p-8 text-center space-y-4">
+                        <Palette size={48} className="text-muted-foreground mx-auto" />
+                        <div>
+                          <h3 className="text-xl font-semibold text-foreground mb-2">Assets Coming Soon</h3>
+                          <p className="text-muted-foreground mb-6">
+                            AI will generate concept art, music, sound effects, and 3D models for your game
+                          </p>
+                          <Button variant="outline" className="gap-2">
+                            <Sparkle size={16} />
+                            Generate Assets with AI
+                          </Button>
+                        </div>
+                      </Card>
+                    )}
                   </div>
                 </ScrollArea>
               </TabsContent>
 
               <TabsContent value="gameplay" className="h-full m-0 p-6">
                 <ScrollArea className="h-full custom-scrollbar">
-                  <div className="space-y-6 max-w-4xl">
-                    <h2 className="text-xl font-semibold text-foreground">Gameplay Systems</h2>
-                    
-                    <div className="text-center py-16 space-y-4">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
-                        <GameController size={40} className="text-accent" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-foreground mb-2">Gameplay Design</h3>
-                        <p className="text-muted-foreground mb-6">Define core mechanics, level design, and player progression systems</p>
-                        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
-                          <Sparkle size={16} />
-                          Design Gameplay
+                  <div className="space-y-6 max-w-6xl">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-semibold text-foreground">Gameplay Systems</h2>
+                      {project.gameplay && project.gameplay.mechanics.length > 0 && (
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <ChartLine size={14} />
+                          Analyze Balance
                         </Button>
-                      </div>
+                      )}
                     </div>
+                    
+                    {project.gameplay && (project.gameplay.mechanics.length > 0 || project.gameplay.levels.length > 0) ? (
+                      <GameplayDisplay gameplay={project.gameplay} />
+                    ) : (
+                      <Card className="glass-card p-8 text-center space-y-4">
+                        <GameController size={48} className="text-muted-foreground mx-auto" />
+                        <div>
+                          <h3 className="text-xl font-semibold text-foreground mb-2">Gameplay Coming Soon</h3>
+                          <p className="text-muted-foreground mb-6">
+                            AI will design game mechanics, levels, and balancing systems
+                          </p>
+                          <Button variant="outline" className="gap-2">
+                            <Sparkle size={16} />
+                            Generate Gameplay with AI
+                          </Button>
+                        </div>
+                      </Card>
+                    )}
                   </div>
                 </ScrollArea>
-              </TabsContent>
-
               <TabsContent value="qa" className="h-full m-0 p-6">
                 <ScrollArea className="h-full custom-scrollbar">
                   <div className="space-y-6 max-w-4xl">
@@ -321,6 +314,35 @@ export function ProjectDetailView({ project, onBack }: ProjectDetailViewProps) {
                         <p className="text-muted-foreground mb-6">Comprehensive testing plans, bug tracking, and quality metrics</p>
                         <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
                           <Sparkle size={16} />
+                          Setup QA Pipeline
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="publishing" className="h-full m-0 p-6">
+                <ScrollArea className="h-full custom-scrollbar">
+                  <div className="space-y-6 max-w-4xl">
+                    <h2 className="text-xl font-semibold text-foreground">Publishing & Launch</h2>
+                    
+                    <div className="text-center py-16 space-y-4">
+                      <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+                        <Rocket size={40} className="text-accent" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-foreground mb-2">Launch Strategy</h3>
+                        <p className="text-muted-foreground mb-6">Platform distribution, marketing campaigns, and post-launch support</p>
+                        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
+                          <Sparkle size={16} />
+                          Plan Launch
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
                           Setup Testing
                         </Button>
                       </div>
@@ -332,46 +354,64 @@ export function ProjectDetailView({ project, onBack }: ProjectDetailViewProps) {
               <TabsContent value="publishing" className="h-full m-0 p-6">
                 <ScrollArea className="h-full custom-scrollbar">
                   <div className="space-y-6 max-w-4xl">
-                    <h2 className="text-xl font-semibold text-foreground">Publishing Strategy</h2>
+                    <h2 className="text-xl font-semibold text-foreground">Publishing & Launch</h2>
                     
-                    {/* Marketing Overview */}
-                    <Card className="glass-card p-6">
-                      <h3 className="font-semibold text-foreground mb-4">Marketing</h3>
-                      <div className="space-y-3">
-                        <div>
-                          <span className="text-muted-foreground">Tagline:</span>
-                          <p className="text-foreground font-medium">{project.publishing?.marketing.tagline}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Target Demographics:</span>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {project.publishing?.marketing.target_demographics?.map((demo, index) => (
-                              <Badge key={index} variant="outline">{demo}</Badge>
+                    {project.publishing ? (
+                      <>
+                        {/* Marketing Overview */}
+                        <Card className="glass-card p-6">
+                          <h3 className="font-semibold text-foreground mb-4">Marketing</h3>
+                          <div className="space-y-3">
+                            <div>
+                              <span className="text-muted-foreground">Tagline:</span>
+                              <p className="text-foreground font-medium">{project.publishing.marketing.tagline}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Target Demographics:</span>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {project.publishing.marketing.target_demographics?.map((demo, index) => (
+                                  <Badge key={index} variant="outline">{demo}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </Card>
+
+                        {/* Platforms */}
+                        <Card className="glass-card p-6">
+                          <h3 className="font-semibold text-foreground mb-4">Target Platforms</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {project.publishing.platforms?.map((platform, index) => (
+                              <div key={index} className="glass p-4 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-medium text-foreground">{platform.name}</span>
+                                  <Badge variant="secondary" className={getStatusColor(platform.status)}>
+                                    {platform.status}
+                                  </Badge>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {platform.requirements.length} requirements
+                                </div>
+                              </div>
                             ))}
                           </div>
+                        </Card>
+                      </>
+                    ) : (
+                      <div className="text-center py-16 space-y-4">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+                          <Rocket size={40} className="text-accent" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold text-foreground mb-2">Launch Strategy</h3>
+                          <p className="text-muted-foreground mb-6">Platform distribution, marketing campaigns, and post-launch support</p>
+                          <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
+                            <Sparkle size={16} />
+                            Plan Launch
+                          </Button>
                         </div>
                       </div>
-                    </Card>
-
-                    {/* Platforms */}
-                    <Card className="glass-card p-6">
-                      <h3 className="font-semibold text-foreground mb-4">Target Platforms</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {project.publishing?.platforms?.map((platform, index) => (
-                          <div key={index} className="glass p-4 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-foreground">{platform.name}</span>
-                              <Badge variant="secondary" className={getStatusColor(platform.status)}>
-                                {platform.status}
-                              </Badge>
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {platform.requirements.length} requirements
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </Card>
+                    )}
                   </div>
                 </ScrollArea>
               </TabsContent>

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProject } from '@/lib/types'
 import { generateMockProject } from '@/lib/mockData'
+import { aiMockGenerator } from '@/lib/aiMockGenerator'
+import { PipelineVisualizer, createPipelineStages } from '@/components/PipelineVisualizer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,9 +15,13 @@ import {
   GameController, 
   Wand, 
   Lightning,
-  PaperPlaneRight
+  PaperPlaneRight,
+  Brain,
+  Palette,
+  Gamepad2
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface ProjectCreationDialogProps {
   isOpen: boolean
@@ -41,39 +47,103 @@ export function ProjectCreationDialog({
 }: ProjectCreationDialogProps) {
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generationStep, setGenerationStep] = useState(0)
-
-  const generationSteps = [
-    { label: 'Analyzing your idea...', icon: Sparkle },
-    { label: 'Generating core concept...', icon: Wand },
-    { label: 'Creating story outline...', icon: GameController },
-    { label: 'Setting up development pipeline...', icon: Lightning },
-    { label: 'Finalizing project...', icon: PaperPlaneRight }
-  ]
+  const [currentPhase, setCurrentPhase] = useState<'input' | 'generating' | 'pipeline'>('input')
+  const [pipelineStages, setPipelineStages] = useState(createPipelineStages())
+  const [currentPipelineStage, setCurrentPipelineStage] = useState<string>('')
+  const [generatedProject, setGeneratedProject] = useState<GameProject | null>(null)
 
   const handleCreateProject = async () => {
     if (!prompt.trim() || isGenerating) return
 
     setIsGenerating(true)
-    setGenerationStep(0)
+    setCurrentPhase('generating')
 
-    // Simulate AI generation with step-by-step progress
-    for (let i = 0; i < generationSteps.length; i++) {
-      setGenerationStep(i)
-      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400))
+    try {
+      // Start with a basic project
+      const baseProject = generateMockProject(prompt)
+      setGeneratedProject(baseProject)
+
+      // Switch to pipeline view
+      setTimeout(() => {
+        setCurrentPhase('pipeline')
+        startAIPipeline()
+      }, 1500)
+
+    } catch (error) {
+      console.error('Error generating project:', error)
+      toast.error('Failed to generate project. Please try again.')
+      setIsGenerating(false)
+      setCurrentPhase('input')
     }
+  }
 
-    // Generate the actual project
-    const newProject = generateMockProject(prompt)
+  const startAIPipeline = async () => {
+    const stages = [...pipelineStages]
     
-    // Final step
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    onProjectCreated(newProject)
-    
-    // Reset state
+    try {
+      // Update pipeline stages and generate content
+      const pipelineProgress = (stageId: string, progress: number) => {
+        setPipelineStages(currentStages => 
+          currentStages.map(stage => {
+            if (stage.id === stageId) {
+              return {
+                ...stage,
+                status: progress === 100 ? 'complete' : 'active',
+                progress
+              }
+            }
+            return stage
+          })
+        )
+        setCurrentPipelineStage(stageId)
+      }
+
+      // Generate story, assets, and gameplay with visual feedback
+      const generatedContent = await aiMockGenerator.generateFullProject(
+        prompt, 
+        pipelineProgress
+      )
+
+      // Update the project with generated content
+      if (generatedProject) {
+        const enhancedProject: GameProject = {
+          ...generatedProject,
+          ...generatedContent,
+          pipeline: stages.map(stage => ({
+            id: stage.id,
+            name: stage.name,
+            status: 'complete',
+            progress: 100,
+            order: stages.indexOf(stage) + 1
+          }))
+        }
+
+        // Final completion
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        onProjectCreated(enhancedProject)
+        toast.success('🎮 Game project created successfully!')
+        
+        handleClose()
+      }
+
+    } catch (error) {
+      console.error('Error in AI pipeline:', error)
+      toast.error('Error generating AI content. Using basic project.')
+      
+      if (generatedProject) {
+        onProjectCreated(generatedProject)
+      }
+      handleClose()
+    }
+  }
+
+  const handleClose = () => {
     setIsGenerating(false)
-    setGenerationStep(0)
+    setCurrentPhase('input')
+    setCurrentPipelineStage('')
+    setPipelineStages(createPipelineStages())
+    setGeneratedProject(null)
     setPrompt('')
     onClose()
   }
@@ -83,8 +153,8 @@ export function ProjectCreationDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glass-card max-w-2xl border-accent/20">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="glass-card max-w-4xl border-accent/20 max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-2xl">
             <div className="w-10 h-10 rounded-full gradient-cosmic flex items-center justify-center">
@@ -95,7 +165,7 @@ export function ProjectCreationDialog({
         </DialogHeader>
 
         <AnimatePresence mode="wait">
-          {!isGenerating ? (
+          {currentPhase === 'input' && (
             <motion.div
               key="input"
               initial={{ opacity: 0, y: 20 }}
@@ -147,7 +217,7 @@ export function ProjectCreationDialog({
               <div className="flex items-center justify-between pt-4">
                 <Button 
                   variant="outline" 
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="border-border/50 hover:border-border"
                 >
                   Cancel
@@ -162,7 +232,9 @@ export function ProjectCreationDialog({
                 </Button>
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {currentPhase === 'generating' && (
             <motion.div
               key="generating"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -178,78 +250,92 @@ export function ProjectCreationDialog({
                   transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                   className="w-16 h-16 mx-auto rounded-full gradient-cosmic flex items-center justify-center"
                 >
-                  <Sparkle size={32} className="text-white" />
+                  <Brain size={32} className="text-white" />
                 </motion.div>
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">
-                    AI Creating Your Game...
+                    AI Analyzing Your Concept...
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    This may take a moment while I craft your perfect game project
+                    Preparing to generate your complete game project
                   </p>
                 </div>
               </div>
 
-              {/* Generation Steps */}
-              <div className="space-y-4">
-                {generationSteps.map((step, index) => {
-                  const StepIcon = step.icon
-                  const isActive = index === generationStep
-                  const isComplete = index < generationStep
-                  
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1, duration: 0.3 }}
-                      className={cn(
-                        'flex items-center gap-4 p-3 rounded-lg transition-all duration-300',
-                        isActive && 'bg-accent/20 border border-accent/30',
-                        isComplete && 'opacity-60'
-                      )}
-                    >
-                      <div className={cn(
-                        'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
-                        isActive && 'bg-accent text-accent-foreground animate-pulse-glow',
-                        isComplete && 'bg-emerald-500/20 text-emerald-400',
-                        !isActive && !isComplete && 'bg-muted/50 text-muted-foreground'
-                      )}>
-                        <StepIcon size={16} />
-                      </div>
-                      <span className={cn(
-                        'font-medium transition-colors duration-300',
-                        isActive && 'text-accent',
-                        isComplete && 'text-emerald-400',
-                        !isActive && !isComplete && 'text-muted-foreground'
-                      )}>
-                        {step.label}
-                      </span>
-                      {isActive && (
-                        <div className="ml-auto">
-                          <div className="flex gap-1">
-                            <motion.div
-                              animate={{ scale: [1, 1.2, 1] }}
-                              transition={{ duration: 1, repeat: Infinity }}
-                              className="w-2 h-2 rounded-full bg-accent"
-                            />
-                            <motion.div
-                              animate={{ scale: [1, 1.2, 1] }}
-                              transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-                              className="w-2 h-2 rounded-full bg-accent"
-                            />
-                            <motion.div
-                              animate={{ scale: [1, 1.2, 1] }}
-                              transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-                              className="w-2 h-2 rounded-full bg-accent"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  )
-                })}
+              {/* Floating particles */}
+              <div className="relative h-32 overflow-hidden">
+                {[...Array(12)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 bg-accent/60 rounded-full"
+                    initial={{ 
+                      x: Math.random() * 400, 
+                      y: 120,
+                      opacity: 0 
+                    }}
+                    animate={{ 
+                      y: -20,
+                      opacity: [0, 1, 0],
+                      scale: [0.5, 1, 0.5]
+                    }}
+                    transition={{ 
+                      duration: 3,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                      ease: "easeOut"
+                    }}
+                  />
+                ))}
               </div>
+            </motion.div>
+          )}
+
+          {currentPhase === 'pipeline' && (
+            <motion.div
+              key="pipeline"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              <div className="text-center space-y-2 mb-8">
+                <h3 className="text-xl font-bold text-foreground">
+                  🚀 AI Generation Pipeline
+                </h3>
+                <p className="text-muted-foreground">
+                  Watch as AI creates your game content in real-time
+                </p>
+              </div>
+
+              <PipelineVisualizer 
+                stages={pipelineStages}
+                currentStage={currentPipelineStage}
+                className="mb-8"
+              />
+
+              {/* Current activity indicator */}
+              {currentPipelineStage && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center p-4 glass-card rounded-lg"
+                >
+                  <div className="flex items-center justify-center gap-3 text-accent">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                    >
+                      {currentPipelineStage === 'story' && <Brain size={20} />}
+                      {currentPipelineStage === 'assets' && <Palette size={20} />}
+                      {currentPipelineStage === 'gameplay' && <Gamepad2 size={20} />}
+                    </motion.div>
+                    <span className="font-medium">
+                      Generating {currentPipelineStage.charAt(0).toUpperCase() + currentPipelineStage.slice(1)}...
+                    </span>
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
