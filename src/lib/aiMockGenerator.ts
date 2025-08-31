@@ -1,4 +1,4 @@
-import { GameProject, StoryContent, AssetCollection, GameplayContent, Character, GameMechanic, Level } from './types'
+import { GameProject, StoryContent, AssetCollection, GameplayContent, QAContent, Character, GameMechanic, Level } from './types'
 
 // Mock story generation data pools
 const STORY_TEMPLATES = {
@@ -381,7 +381,102 @@ export class AIMockGenerator {
     return gameplay
   }
 
-  async generateFullProject(prompt: string, onPipelineProgress?: (stage: string, progress: number) => void): Promise<Partial<GameProject>> {
+  async generateQA(prompt: string, gameplay?: GameplayContent, onProgress?: (stage: string, progress: number) => void): Promise<QAContent> {
+    onProgress?.('Initializing QA systems...', 20)
+    await this.delay(800)
+
+    onProgress?.('Running automated tests...', 50)
+    await this.delay(1200)
+
+    onProgress?.('Generating test scenarios...', 80)
+    await this.delay(1000)
+
+    // Generate test plans
+    const testPlans = [
+      {
+        id: 'test-functional',
+        name: 'Functional Testing',
+        type: 'functional' as const,
+        status: 'complete' as const,
+        testCases: [
+          {
+            id: 'tc-1',
+            description: 'Player movement and controls',
+            steps: ['Start game', 'Use movement controls', 'Test all directions'],
+            expected: 'Player moves smoothly without lag',
+            status: 'pass' as const
+          },
+          {
+            id: 'tc-2', 
+            description: 'Game progression system',
+            steps: ['Complete first level', 'Check XP gain', 'Verify level unlock'],
+            expected: 'Player progresses correctly through levels',
+            status: 'pass' as const
+          }
+        ]
+      },
+      {
+        id: 'test-performance',
+        name: 'Performance Testing',
+        type: 'performance' as const,
+        status: 'in-progress' as const,
+        testCases: [
+          {
+            id: 'tc-3',
+            description: 'Frame rate stability',
+            steps: ['Run game for 30 minutes', 'Monitor FPS', 'Check for drops'],
+            expected: 'Consistent 60 FPS on target hardware',
+            status: 'pending' as const
+          }
+        ]
+      }
+    ]
+
+    // Generate bugs
+    const bugs = [
+      {
+        id: 'bug-1',
+        title: 'Audio cutting out in level 3',
+        severity: 'medium' as const,
+        status: 'open' as const,
+        description: 'Background music stops playing randomly in level 3',
+        steps: ['Load level 3', 'Play for 2-3 minutes', 'Audio stops'],
+        assignee: 'Audio Team'
+      },
+      {
+        id: 'bug-2',
+        title: 'Minor UI text overlap on mobile',
+        severity: 'low' as const,
+        status: 'in-progress' as const,
+        description: 'Score text overlaps with health bar on smaller screens',
+        steps: ['Launch on mobile device', 'Check UI alignment'],
+        assignee: 'UI Team'
+      }
+    ]
+
+    // Generate metrics
+    const metrics = {
+      test_coverage: this.randomInt(85, 95),
+      bug_count: bugs.length,
+      resolved_bugs: 0,
+      performance_score: this.randomInt(7, 9) / 10 * 100
+    }
+
+    onProgress?.('QA analysis complete!', 100)
+    await this.delay(500)
+
+    return {
+      testPlans,
+      bugs,
+      metrics
+    }
+  }
+
+  async generateFullProject(
+    prompt: string, 
+    onPipelineProgress?: (stage: string, progress: number) => void,
+    onQAReady?: () => void
+  ): Promise<Partial<GameProject>> {
     // Story generation
     onPipelineProgress?.('story', 10)
     const story = await this.generateStory(prompt)
@@ -402,10 +497,24 @@ export class AIMockGenerator {
     const gameplay = await this.generateGameplay(prompt, story)
     onPipelineProgress?.('gameplay', 100)
 
+    await this.delay(500)
+
+    // QA generation
+    onPipelineProgress?.('qa', 10)
+    const qa = await this.generateQA(prompt, gameplay)
+    onPipelineProgress?.('qa', 100)
+
+    // Trigger QA workspace after QA stage completion
+    if (onQAReady) {
+      await this.delay(800) // Brief pause to show completion
+      onQAReady()
+    }
+
     return {
       story,
       assets,
-      gameplay
+      gameplay,
+      qa
     }
   }
 }

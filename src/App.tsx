@@ -9,6 +9,7 @@ import { QAWorkspace } from '@/components/QAWorkspace'
 import { Toaster } from '@/components/ui/sonner'
 import { useKV } from '@github/spark/hooks'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { toast } from 'sonner'
 
 function App() {
   const [currentSection, setCurrentSection] = useState('dashboard')
@@ -45,6 +46,7 @@ function App() {
 
   const handleQAWorkspace = (project: GameProject) => {
     setQaProject(project)
+    toast.success('🔬 Entering QA Testing Studio!')
   }
 
   const handleCloseQA = () => {
@@ -64,9 +66,9 @@ function App() {
 
     switch (currentSection) {
       case 'dashboard':
-        return <Dashboard onProjectSelect={handleProjectSelect} />
+        return <Dashboard onProjectSelect={handleProjectSelect} onQAWorkspace={handleQAWorkspace} />
       case 'projects':
-        return <Dashboard onProjectSelect={handleProjectSelect} />
+        return <Dashboard onProjectSelect={handleProjectSelect} onQAWorkspace={handleQAWorkspace} />
       case 'story':
       case 'assets':
       case 'gameplay':

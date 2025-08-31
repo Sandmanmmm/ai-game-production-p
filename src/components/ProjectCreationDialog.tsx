@@ -18,7 +18,8 @@ import {
   PaperPlaneRight,
   Brain,
   Palette,
-  Gamepad2
+  Gamepad2,
+  Bug
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -27,6 +28,7 @@ interface ProjectCreationDialogProps {
   isOpen: boolean
   onClose: () => void
   onProjectCreated: (project: GameProject) => void
+  onQAWorkspace?: (project: GameProject) => void
 }
 
 const inspirationPrompts = [
@@ -43,7 +45,8 @@ const inspirationPrompts = [
 export function ProjectCreationDialog({
   isOpen,
   onClose,
-  onProjectCreated
+  onProjectCreated,
+  onQAWorkspace
 }: ProjectCreationDialogProps) {
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -98,22 +101,48 @@ export function ProjectCreationDialog({
         setCurrentPipelineStage(stageId)
       }
 
-      // Generate story, assets, and gameplay with visual feedback
+      // QA Ready callback - opens QA workspace when QA stage completes
+      const onQAReady = () => {
+        if (generatedProject && onQAWorkspace) {
+          // Create enhanced project with QA stage complete
+          const enhancedProject: GameProject = {
+            ...generatedProject,
+            pipeline: stages.map(stage => ({
+              id: stage.id,
+              name: stage.name,
+              status: stage.id === 'qa' ? 'complete' : stage.id === 'publish' ? 'pending' : 'complete',
+              progress: stage.id === 'publish' ? 0 : 100,
+              order: stages.indexOf(stage) + 1
+            }))
+          }
+          
+          // Close dialog and open QA workspace
+          handleClose()
+          onProjectCreated(enhancedProject)
+          setTimeout(() => {
+            onQAWorkspace(enhancedProject)
+          }, 500) // Small delay to let the project be created first
+          return
+        }
+      }
+
+      // Generate story, assets, gameplay, and QA with visual feedback
       const generatedContent = await aiMockGenerator.generateFullProject(
         prompt, 
-        pipelineProgress
+        pipelineProgress,
+        onQAReady
       )
 
-      // Update the project with generated content
-      if (generatedProject) {
+      // If QA callback wasn't triggered (fallback), complete normally
+      if (generatedProject && !onQAWorkspace) {
         const enhancedProject: GameProject = {
           ...generatedProject,
           ...generatedContent,
           pipeline: stages.map(stage => ({
             id: stage.id,
             name: stage.name,
-            status: 'complete',
-            progress: 100,
+            status: stage.id === 'publish' ? 'pending' : 'complete',
+            progress: stage.id === 'publish' ? 0 : 100,
             order: stages.indexOf(stage) + 1
           }))
         }
@@ -329,9 +358,13 @@ export function ProjectCreationDialog({
                       {currentPipelineStage === 'story' && <Brain size={20} />}
                       {currentPipelineStage === 'assets' && <Palette size={20} />}
                       {currentPipelineStage === 'gameplay' && <Gamepad2 size={20} />}
+                      {currentPipelineStage === 'qa' && <Bug size={20} />}
                     </motion.div>
                     <span className="font-medium">
-                      Generating {currentPipelineStage.charAt(0).toUpperCase() + currentPipelineStage.slice(1)}...
+                      {currentPipelineStage === 'qa' 
+                        ? 'Preparing QA Testing Studio...' 
+                        : `Generating ${currentPipelineStage.charAt(0).toUpperCase() + currentPipelineStage.slice(1)}...`
+                      }
                     </span>
                   </div>
                 </motion.div>

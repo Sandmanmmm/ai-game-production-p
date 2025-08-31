@@ -26,9 +26,10 @@ import { useKV } from '@github/spark/hooks'
 
 interface DashboardProps {
   onProjectSelect: (project: GameProject) => void
+  onQAWorkspace?: (project: GameProject) => void
 }
 
-export function Dashboard({ onProjectSelect }: DashboardProps) {
+export function Dashboard({ onProjectSelect, onQAWorkspace }: DashboardProps) {
   const [projects, setProjects] = useKV<GameProject[]>('game_projects', [])
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -303,6 +304,7 @@ export function Dashboard({ onProjectSelect }: DashboardProps) {
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onProjectCreated={handleProjectCreated}
+        onQAWorkspace={onQAWorkspace}
       />
     </div>
   )
