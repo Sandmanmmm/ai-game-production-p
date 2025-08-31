@@ -35,9 +35,10 @@ import { cn } from '@/lib/utils'
 interface ProjectDetailViewProps {
   project: GameProject
   onBack: () => void
+  onQAWorkspace: (project: GameProject) => void
 }
 
-export function ProjectDetailView({ project, onBack }: ProjectDetailViewProps) {
+export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDetailViewProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [isAIMinimized, setIsAIMinimized] = useState(false)
 
@@ -307,17 +308,126 @@ export function ProjectDetailView({ project, onBack }: ProjectDetailViewProps) {
                   <div className="space-y-6 max-w-4xl">
                     <h2 className="text-xl font-semibold text-foreground">Quality Assurance</h2>
                     
-                    <div className="text-center py-16 space-y-4">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
-                        <TestTube size={40} className="text-accent" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-foreground mb-2">Testing & QA</h3>
-                        <p className="text-muted-foreground mb-6">Comprehensive testing plans, bug tracking, and quality metrics</p>
-                        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
-                          <Sparkle size={16} />
-                          Setup QA Pipeline
-                        </Button>
+                    <div className="grid gap-6">
+                      {/* Immersive QA Workspace Card */}
+                      <motion.div
+                        whileHover={{ scale: 1.02, y: -4 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="glass-card p-8 cursor-pointer group relative overflow-hidden"
+                        onClick={() => onQAWorkspace(project)}
+                      >
+                        {/* Background Effects */}
+                        <div className="absolute inset-0 opacity-20">
+                          <div className="absolute top-4 right-4 w-32 h-32 bg-accent/30 rounded-full blur-2xl" />
+                          <div className="absolute bottom-4 left-4 w-24 h-24 bg-purple-500/30 rounded-full blur-2xl" />
+                        </div>
+                        
+                        <div className="relative z-10 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-16 h-16 bg-gradient-to-br from-accent to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <TestTube size={28} className="text-black" />
+                              </div>
+                              <div>
+                                <h3 className="text-2xl font-bold text-foreground group-hover:text-accent transition-colors">
+                                  Enter QA Studio
+                                </h3>
+                                <p className="text-muted-foreground">Immersive full-screen testing environment</p>
+                              </div>
+                            </div>
+                            <motion.div
+                              animate={{ rotate: [0, -5, 5, 0] }}
+                              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                              className="text-accent opacity-75"
+                            >
+                              🚀
+                            </motion.div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-accent rounded-full" />
+                                <span className="text-sm font-medium text-foreground">AI Test Assistant</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Live AI feedback and suggestions</p>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                <span className="text-sm font-medium text-foreground">Live Game Preview</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Real-time gameplay simulation</p>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                                <span className="text-sm font-medium text-foreground">Code Editor</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">Instant balance adjustments</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-4 border-t border-border/20">
+                            <div className="text-sm text-muted-foreground">
+                              Transform QA into a creative coding jam session
+                            </div>
+                            <div className="flex items-center gap-2 text-accent font-medium">
+                              <span>Launch Studio</span>
+                              <motion.div
+                                animate={{ x: [0, 4, 0] }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                              >
+                                →
+                              </motion.div>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Traditional QA Features */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card className="glass-card p-6">
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <ChartLine size={20} className="text-blue-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-foreground">Test Analytics</h4>
+                                <p className="text-sm text-muted-foreground">Performance metrics and insights</p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Test Coverage</span>
+                                <span className="text-foreground">0%</span>
+                              </div>
+                              <Progress value={0} className="h-2" />
+                            </div>
+                          </div>
+                        </Card>
+
+                        <Card className="glass-card p-6">
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <TestTube size={20} className="text-green-400" />
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-foreground">Automated Tests</h4>
+                                <p className="text-sm text-muted-foreground">AI-generated test scenarios</p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Tests Passed</span>
+                                <span className="text-foreground">0/0</span>
+                              </div>
+                              <Progress value={0} className="h-2" />
+                            </div>
+                          </div>
+                        </Card>
                       </div>
                     </div>
                   </div>

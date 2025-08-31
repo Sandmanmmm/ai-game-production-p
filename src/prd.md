@@ -53,6 +53,17 @@
 - **Why it matters**: Makes generated content feel valuable and professional, encourages exploration
 - **Success criteria**: Users spend time exploring generated assets, interface feels like professional creative tools
 
+### Immersive QA Workspace
+- **What it does**: Full-screen testing environment with AI assistant chat, live game preview, and real-time code editing capabilities
+- **Why it matters**: Transforms traditional QA from boring bug hunting into creative "vibe coding" experience - like entering Unity's play mode
+- **Features**:
+  - Left panel: AI testing assistant providing live commentary and suggestions during gameplay
+  - Center panel: Real-time game preview with mock 2D gameplay simulation and event logging
+  - Right panel: Editable JSON/code for instant balance adjustments and mechanics tuning
+  - Dark, neon-highlighted theme with optional ambient focus music
+  - Fluid zoom-in animation when entering QA mode
+- **Success criteria**: Users engage with QA mode as creative exploration rather than technical debugging, spending 5+ minutes per session testing and adjusting
+
 ## Design Direction
 
 ### Visual Tone & Identity

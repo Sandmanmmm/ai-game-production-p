@@ -5,6 +5,7 @@ import { getMockProjects } from '@/lib/mockData'
 import { GameStudioSidebar } from '@/components/GameStudioSidebar'
 import { Dashboard } from '@/components/Dashboard'
 import { ProjectDetailView } from '@/components/ProjectDetailView'
+import { QAWorkspace } from '@/components/QAWorkspace'
 import { Toaster } from '@/components/ui/sonner'
 import { useKV } from '@github/spark/hooks'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -14,6 +15,7 @@ function App() {
   const [selectedProject, setSelectedProject] = useState<GameProject | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [projects, setProjects] = useKV<GameProject[]>('game_projects', [])
+  const [qaProject, setQaProject] = useState<GameProject | null>(null)
   const isMobile = useIsMobile()
 
   // Initialize with mock data if no projects exist
@@ -41,12 +43,21 @@ function App() {
     setCurrentSection('dashboard')
   }
 
+  const handleQAWorkspace = (project: GameProject) => {
+    setQaProject(project)
+  }
+
+  const handleCloseQA = () => {
+    setQaProject(null)
+  }
+
   const renderMainContent = () => {
     if (currentSection === 'project-detail' && selectedProject) {
       return (
         <ProjectDetailView 
           project={selectedProject} 
-          onBack={handleBackToDashboard} 
+          onBack={handleBackToDashboard}
+          onQAWorkspace={handleQAWorkspace}
         />
       )
     }
@@ -59,7 +70,6 @@ function App() {
       case 'story':
       case 'assets':
       case 'gameplay':
-      case 'qa':
       case 'publishing':
         return (
           <motion.div
@@ -96,6 +106,69 @@ function App() {
             </div>
           </motion.div>
         )
+      case 'qa':
+        // Show QA selection screen if no project selected
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-1 p-6"
+          >
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="text-center space-y-4">
+                <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                    className="text-accent"
+                  >
+                    🔬
+                  </motion.div>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-foreground mb-2">
+                    QA Testing Studio
+                  </h2>
+                  <p className="text-muted-foreground text-lg">
+                    Select a project to enter the immersive QA testing environment
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <motion.div
+                    key={project.id}
+                    whileHover={{ scale: 1.02, y: -4 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleQAWorkspace(project)}
+                    className="glass-card rounded-xl p-6 cursor-pointer group"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-lg text-foreground group-hover:text-accent transition-colors">
+                          {project.title}
+                        </h3>
+                        <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                          🎮
+                        </div>
+                      </div>
+                      <p className="text-muted-foreground text-sm line-clamp-2">
+                        {project.story?.plot || 'Enter QA mode to test gameplay mechanics and balance.'}
+                      </p>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          Progress: {project.progress}%
+                        </span>
+                        <span className="text-accent font-medium">Test Now →</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )
       default:
         return <Dashboard onProjectSelect={handleProjectSelect} />
     }
@@ -114,7 +187,7 @@ function App() {
       <div className="relative z-10 h-full flex">
         {/* Sidebar */}
         <AnimatePresence>
-          {(currentSection !== 'project-detail' || !isMobile) && (
+          {(currentSection !== 'project-detail' || !isMobile) && !qaProject && (
             <GameStudioSidebar
               currentSection={currentSection}
               onSectionChange={setCurrentSection}
@@ -140,6 +213,16 @@ function App() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* QA Workspace Overlay */}
+      <AnimatePresence>
+        {qaProject && (
+          <QAWorkspace 
+            project={qaProject} 
+            onClose={handleCloseQA}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Global Toast Notifications */}
       <Toaster 
