@@ -475,11 +475,14 @@ export class AIMockGenerator {
   async generateFullProject(
     prompt: string, 
     onPipelineProgress?: (stage: string, progress: number) => void,
-    onQAReady?: () => void
+    onQAReady?: (content?: Partial<GameProject>) => boolean
   ): Promise<Partial<GameProject>> {
+    let generatedContent: Partial<GameProject> = {}
+
     // Story generation
     onPipelineProgress?.('story', 10)
     const story = await this.generateStory(prompt)
+    generatedContent.story = story
     onPipelineProgress?.('story', 100)
 
     // Small delay between stages
@@ -488,6 +491,7 @@ export class AIMockGenerator {
     // Assets generation  
     onPipelineProgress?.('assets', 10)
     const assets = await this.generateAssets(prompt, story.genre)
+    generatedContent.assets = assets
     onPipelineProgress?.('assets', 100)
 
     await this.delay(500)
@@ -495,6 +499,7 @@ export class AIMockGenerator {
     // Gameplay generation
     onPipelineProgress?.('gameplay', 10)
     const gameplay = await this.generateGameplay(prompt, story)
+    generatedContent.gameplay = gameplay
     onPipelineProgress?.('gameplay', 100)
 
     await this.delay(500)
@@ -502,20 +507,23 @@ export class AIMockGenerator {
     // QA generation
     onPipelineProgress?.('qa', 10)
     const qa = await this.generateQA(prompt, gameplay)
+    generatedContent.qa = qa
     onPipelineProgress?.('qa', 100)
 
     // Trigger QA workspace after QA stage completion
     if (onQAReady) {
+      console.log('🔬 AI Generator: QA stage complete, triggering QA Ready callback...')
       await this.delay(800) // Brief pause to show completion
-      onQAReady()
+      const qaHandled = onQAReady(generatedContent)
+      if (qaHandled) {
+        console.log('🔬 AI Generator: QA workspace opened, not returning content')
+        return {} // Don't return content since QA workspace was opened
+      }
+    } else {
+      console.log('🔬 AI Generator: QA stage complete but no callback provided')
     }
 
-    return {
-      story,
-      assets,
-      gameplay,
-      qa
-    }
+    return generatedContent
   }
 }
 

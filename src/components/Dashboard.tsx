@@ -55,7 +55,12 @@ export function Dashboard({ onProjectSelect, onQAWorkspace }: DashboardProps) {
   })
 
   const handleProjectCreated = (newProject: GameProject) => {
-    setProjects(currentProjects => [...currentProjects, newProject])
+    console.log('💾 Saving new project:', newProject.title)
+    setProjects(currentProjects => {
+      const updated = [...currentProjects, newProject]
+      console.log('💾 Projects updated, total count:', updated.length)
+      return updated
+    })
   }
 
   // Dashboard stats

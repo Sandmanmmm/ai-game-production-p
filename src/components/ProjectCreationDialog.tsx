@@ -84,7 +84,7 @@ export function ProjectCreationDialog({
     const stages = [...pipelineStages]
     
     try {
-      // Update pipeline stages and generate content
+      // Update pipeline progress with special QA completion visual
       const pipelineProgress = (stageId: string, progress: number) => {
         setPipelineStages(currentStages => 
           currentStages.map(stage => {
@@ -99,14 +99,43 @@ export function ProjectCreationDialog({
           })
         )
         setCurrentPipelineStage(stageId)
+        
+        // Special handling for QA stage completion
+        if (stageId === 'qa' && progress === 10) {
+          // Notify that QA is starting and will open workspace
+          toast.info('🔬 Starting QA Analysis - Will open Testing Studio when complete...', { 
+            duration: 3000 
+          })
+        }
+        
+        if (stageId === 'qa' && progress === 100) {
+          // Add visual indicator that QA is opening
+          setTimeout(() => {
+            setPipelineStages(currentStages => 
+              currentStages.map(stage => {
+                if (stage.id === 'qa') {
+                  return {
+                    ...stage,
+                    name: 'QA Testing (Opening Studio...)',
+                    status: 'complete' as const
+                  }
+                }
+                return stage
+              })
+            )
+          }, 500)
+        }
       }
 
       // QA Ready callback - opens QA workspace when QA stage completes
-      const onQAReady = () => {
+      const onQAReady = (generatedContent?: Partial<GameProject>) => {
+        console.log('🔬 QA Ready callback triggered!', { generatedProject, onQAWorkspace, generatedContent })
+        
         if (generatedProject && onQAWorkspace) {
           // Create enhanced project with QA stage complete
           const enhancedProject: GameProject = {
             ...generatedProject,
+            ...generatedContent, // Include all the AI generated content
             pipeline: stages.map(stage => ({
               id: stage.id,
               name: stage.name,
@@ -116,25 +145,38 @@ export function ProjectCreationDialog({
             }))
           }
           
-          // Close dialog and open QA workspace
-          handleClose()
+          console.log('🔬 Opening QA workspace for project:', enhancedProject.title)
+          
+          // Close dialog and save project first
           onProjectCreated(enhancedProject)
+          handleClose()
+          
+          // Add toast notification
+          toast.success('🔬 QA Testing complete! Opening QA Studio...', { duration: 2000 })
+          
           setTimeout(() => {
             onQAWorkspace(enhancedProject)
-          }, 500) // Small delay to let the project be created first
-          return
+          }, 800) // Slightly longer delay to ensure smooth transition
+          return true // Signal that QA was handled
         }
+        
+        console.warn('🔬 QA Ready callback called but missing project or workspace handler')
+        return false
       }
 
       // Generate story, assets, gameplay, and QA with visual feedback
+      console.log('🚀 Starting AI pipeline generation...')
       const generatedContent = await aiMockGenerator.generateFullProject(
         prompt, 
         pipelineProgress,
         onQAReady
       )
 
-      // If QA callback wasn't triggered (fallback), complete normally
-      if (generatedProject && !onQAWorkspace) {
+      console.log('✅ AI pipeline generation completed', { generatedContent })
+
+      // If QA callback wasn't triggered or didn't handle it, complete normally
+      if (generatedProject && Object.keys(generatedContent).length > 0) {
+        console.log('⚠️ Falling back to normal project completion (no QA workspace or not handled)')
         const enhancedProject: GameProject = {
           ...generatedProject,
           ...generatedContent,
@@ -154,6 +196,8 @@ export function ProjectCreationDialog({
         toast.success('🎮 Game project created successfully!')
         
         handleClose()
+      } else {
+        console.log('🔬 QA workspace flow completed, skipping normal completion')
       }
 
     } catch (error) {
