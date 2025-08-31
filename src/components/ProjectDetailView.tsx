@@ -300,6 +300,8 @@ export function ProjectDetailView({ project, onBack }: ProjectDetailViewProps) {
                     )}
                   </div>
                 </ScrollArea>
+              </TabsContent>
+
               <TabsContent value="qa" className="h-full m-0 p-6">
                 <ScrollArea className="h-full custom-scrollbar">
                   <div className="space-y-6 max-w-4xl">
@@ -315,35 +317,6 @@ export function ProjectDetailView({ project, onBack }: ProjectDetailViewProps) {
                         <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
                           <Sparkle size={16} />
                           Setup QA Pipeline
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-
-              <TabsContent value="publishing" className="h-full m-0 p-6">
-                <ScrollArea className="h-full custom-scrollbar">
-                  <div className="space-y-6 max-w-4xl">
-                    <h2 className="text-xl font-semibold text-foreground">Publishing & Launch</h2>
-                    
-                    <div className="text-center py-16 space-y-4">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
-                        <Rocket size={40} className="text-accent" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold text-foreground mb-2">Launch Strategy</h3>
-                        <p className="text-muted-foreground mb-6">Platform distribution, marketing campaigns, and post-launch support</p>
-                        <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
-                          <Sparkle size={16} />
-                          Plan Launch
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-                          Setup Testing
                         </Button>
                       </div>
                     </div>
