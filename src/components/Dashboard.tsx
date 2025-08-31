@@ -30,6 +30,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onProjectSelect, onQAWorkspace }: DashboardProps) {
+  console.log('🎯 DASHBOARD: Component mounted, onProjectSelect type:', typeof onProjectSelect)
   const [projects, setProjects] = useKV<GameProject[]>('game_projects', [])
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -225,7 +226,10 @@ export function Dashboard({ onProjectSelect, onQAWorkspace }: DashboardProps) {
                 >
                   <ProjectCard
                     project={project}
-                    onClick={onProjectSelect}
+                    onClick={(project) => {
+                      console.log('🎯 DASHBOARD: Project card clicked:', project.title)
+                      onProjectSelect(project)
+                    }}
                     className={viewMode === 'list' ? 'w-full' : ''}
                   />
                 </motion.div>

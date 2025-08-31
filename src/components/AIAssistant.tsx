@@ -7,15 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Robot, 
-  User, 
-  PaperPlaneRight, 
-  Sparkle,
-  X,
-  Minimize,
-  Maximize
-} from '@phosphor-icons/react'
+import { Robot } from '@phosphor-icons/react/dist/csr/Robot'
+import { User } from '@phosphor-icons/react/dist/csr/User'
+import { PaperPlaneRight } from '@phosphor-icons/react/dist/csr/PaperPlaneRight'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { X } from '@phosphor-icons/react/dist/csr/X'
+import { Minus } from '@phosphor-icons/react/dist/csr/Minus'
+import { ArrowsOut } from '@phosphor-icons/react/dist/csr/ArrowsOut'
 import { cn } from '@/lib/utils'
 import { useKV } from '@github/spark/hooks'
 
@@ -141,7 +139,7 @@ export function AIAssistant({
                 onClick={onToggleMinimize}
                 className="text-muted-foreground hover:text-foreground"
               >
-                <Minimize size={16} />
+                <Minus size={16} />
               </Button>
             </div>
           </div>

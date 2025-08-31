@@ -528,3 +528,437 @@ export class AIMockGenerator {
 }
 
 export const aiMockGenerator = new AIMockGenerator()
+
+// Story & Lore Content Generator
+export async function generateStoryContent(prompt: string, genre: string = 'adventure') {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1500))
+  
+  const storyTemplates = STORY_TEMPLATES[genre as keyof typeof STORY_TEMPLATES] || STORY_TEMPLATES.adventure
+  
+  const mockStoryContent = {
+    worldLore: {
+      id: 'world-' + Date.now(),
+      name: `${genre.charAt(0).toUpperCase() + genre.slice(1)} World`,
+      geography: storyTemplates.settings[Math.floor(Math.random() * storyTemplates.settings.length)],
+      politics: generatePoliticalSystem(genre),
+      culture: generateCulture(genre),
+      history: generateHistory(genre),
+      technology: generateTechnology(genre),
+      magic: genre === 'fantasy' ? generateMagicSystem() : ''
+    },
+    mainStoryArc: {
+      id: 'arc-main',
+      title: 'The Main Quest',
+      description: storyTemplates.plotStructures[Math.floor(Math.random() * storyTemplates.plotStructures.length)],
+      acts: generateStoryActs(),
+      themes: storyTemplates.themes.slice(0, 2 + Math.floor(Math.random() * 2)),
+      tone: ['dark', 'serious', 'balanced', 'light'][Math.floor(Math.random() * 4)] as any
+    },
+    chapters: generateChapters(3 + Math.floor(Math.random() * 5)),
+    characters: generateStoryCharacters(genre),
+    factions: generateFactions(genre),
+    subplots: generateSubplots(),
+    timeline: generateTimeline(),
+    metadata: {
+      genre,
+      targetAudience: 'general',
+      complexity: ['simple', 'medium', 'complex'][Math.floor(Math.random() * 3)] as any,
+      estimatedLength: ['short', 'medium', 'long'][Math.floor(Math.random() * 3)] as any,
+      themes: storyTemplates.themes.slice(0, 3),
+      contentWarnings: genre === 'horror' ? ['violence', 'disturbing themes'] : []
+    }
+  }
+  
+  return mockStoryContent
+}
+
+function generatePoliticalSystem(genre: string): string {
+  const systems = {
+    fantasy: ['A feudal system ruled by noble houses', 'A theocracy guided by ancient prophecies', 'A magical council of archmages'],
+    scifi: ['A corporate technocracy', 'A post-scarcity democracy', 'An AI-assisted meritocracy'],
+    horror: ['A corrupt small-town government', 'A secretive organization pulling the strings', 'Anarchy after societal collapse'],
+    adventure: ['A republic of explorers', 'Nomadic tribes with rotating leadership', 'A confederation of city-states']
+  }
+  const systemArray = systems[genre as keyof typeof systems] || systems.adventure
+  return systemArray[Math.floor(Math.random() * systemArray.length)]
+}
+
+function generateCulture(genre: string): string {
+  const cultures = {
+    fantasy: ['Honor-bound warriors who value bravery above all', 'Scholarly mages who preserve ancient knowledge', 'Nature-worshiping druids living in harmony'],
+    scifi: ['Cybernetic-enhanced humans exploring identity', 'Space-born generations who never knew planets', 'Gene-modified colonists adapted to harsh environments'],
+    horror: ['Isolated communities with dark traditions', 'Urban dwellers disconnected from nature', 'Survivors clinging to pre-catastrophe customs'],
+    adventure: ['Treasure-seeking explorers and merchants', 'Nomadic peoples following seasonal migrations', 'Coastal civilizations master of sea and storm']
+  }
+  const cultureArray = cultures[genre as keyof typeof cultures] || cultures.adventure
+  return cultureArray[Math.floor(Math.random() * cultureArray.length)]
+}
+
+function generateHistory(genre: string): string {
+  const histories = {
+    fantasy: ['The Great War of the Five Kingdoms ended in magical catastrophe', 'Dragons once ruled before the Age of Heroes began', 'Ancient artifacts still hold the power of lost civilizations'],
+    scifi: ['The Singularity changed humanity forever', 'First contact with aliens reshaped society', 'The Climate Wars drove humanity to the stars'],
+    horror: ['The Event that no one speaks about anymore', 'Experiments that should never have been conducted', 'Ancient evils that were never truly vanquished'],
+    adventure: ['The Golden Age of exploration and discovery', 'The Great Expedition that opened new frontiers', 'Lost civilizations waiting to be rediscovered']
+  }
+  const historyArray = histories[genre as keyof typeof histories] || histories.adventure
+  return historyArray[Math.floor(Math.random() * historyArray.length)]
+}
+
+function generateTechnology(genre: string): string {
+  const tech = {
+    fantasy: ['Magical crystals power ancient technologies', 'Enchanted items blend magic with craftsmanship', 'Alchemical innovations rival modern science'],
+    scifi: ['Faster-than-light travel through quantum tunneling', 'Neural interfaces for direct mind-machine connection', 'Nanotechnology reshapes matter at will'],
+    horror: ['Forbidden technologies with terrible costs', 'Experimental devices that breach reality', 'Ancient knowledge that should stay buried'],
+    adventure: ['Ingenious mechanical contraptions and gadgets', 'Sailing ships capable of extraordinary journeys', 'Maps and navigation tools for unknown territories']
+  }
+  const techArray = tech[genre as keyof typeof tech] || tech.adventure
+  return techArray[Math.floor(Math.random() * techArray.length)]
+}
+
+function generateMagicSystem(): string {
+  const systems = [
+    'Magic flows through ley lines connecting sacred sites',
+    'Spellcasters must sacrifice memories to cast spells',
+    'Magic is tied to emotions and mental state',
+    'Elemental magic requires physical gestures and words',
+    'Magic can only be used during certain celestial alignments'
+  ]
+  return systems[Math.floor(Math.random() * systems.length)]
+}
+
+function generateStoryActs() {
+  return [
+    { id: 'act1', name: 'The Call to Adventure', description: 'The hero\'s journey begins with an inciting incident', chapters: [], climax: 'The point of no return' },
+    { id: 'act2', name: 'The Conflict Rises', description: 'Challenges intensify as stakes are raised', chapters: [], climax: 'The darkest moment' },
+    { id: 'act3', name: 'Resolution', description: 'The final confrontation and its aftermath', chapters: [], climax: 'The climactic battle' }
+  ]
+}
+
+function generateChapters(count: number) {
+  const chapters = []
+  for (let i = 0; i < count; i++) {
+    chapters.push({
+      id: `chapter-${i + 1}`,
+      title: `Chapter ${i + 1}`,
+      description: `An important part of the story unfolds`,
+      content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+      order: i + 1,
+      status: 'draft' as const,
+      characters: [],
+      locations: [],
+      objectives: [`Complete objective ${i + 1}`]
+    })
+  }
+  return chapters
+}
+
+function generateStoryCharacters(genre: string) {
+  const names = {
+    fantasy: ['Thorin', 'Lyra', 'Gareth', 'Elara', 'Magnus'],
+    scifi: ['Zara', 'Kai', 'Nova', 'Atlas', 'Vex'],
+    horror: ['Sarah', 'Marcus', 'Elena', 'David', 'Amy'],
+    adventure: ['Jake', 'Maya', 'Diego', 'Aria', 'Rex']
+  }
+  
+  const characterNames = names[genre as keyof typeof names] || names.adventure
+  
+  return [
+    {
+      id: 'char-1',
+      name: characterNames[0],
+      role: 'protagonist' as const,
+      description: 'A brave hero with a mysterious past',
+      backstory: 'Born in humble circumstances, destined for greatness',
+      motivation: 'To protect those they care about',
+      arc: 'From inexperienced to legendary hero',
+      relationships: [],
+      traits: {
+        courage: 85,
+        intelligence: 70,
+        charisma: 60,
+        loyalty: 90,
+        ambition: 75,
+        empathy: 80
+      }
+    },
+    {
+      id: 'char-2', 
+      name: characterNames[1],
+      role: 'supporting' as const,
+      description: 'A loyal companion with unique skills',
+      backstory: 'A trusted ally from the hero\'s past',
+      relationships: [],
+      traits: {
+        courage: 70,
+        intelligence: 85,
+        charisma: 75,
+        loyalty: 95,
+        ambition: 50,
+        empathy: 85
+      }
+    },
+    {
+      id: 'char-3',
+      name: characterNames[2],
+      role: 'antagonist' as const,
+      description: 'A formidable foe with complex motivations',
+      backstory: 'Once a hero, now corrupted by power',
+      relationships: [],
+      traits: {
+        courage: 90,
+        intelligence: 95,
+        charisma: 85,
+        loyalty: 30,
+        ambition: 95,
+        empathy: 20
+      }
+    }
+  ]
+}
+
+function generateFactions(genre: string) {
+  const factionNames = {
+    fantasy: ['The Silver Order', 'Shadowmere Guild', 'The Iron Throne'],
+    scifi: ['Stellar Federation', 'The Syndicate', 'Neo-Terra Alliance'],
+    horror: ['The Cult of Shadows', 'Survivors United', 'The Corporation'],
+    adventure: ['Explorers Guild', 'The Merchant Union', 'Sky Pirates']
+  }
+  
+  const names = factionNames[genre as keyof typeof factionNames] || factionNames.adventure
+  
+  return [
+    {
+      id: 'faction-1',
+      name: names[0],
+      description: 'A noble organization fighting for justice',
+      goals: ['Protect the innocent', 'Maintain order', 'Preserve ancient knowledge'],
+      resources: ['Trained warriors', 'Sacred artifacts', 'Political influence'],
+      members: ['char-1'],
+      relationships: [],
+      power: 75,
+      influence: ['Military', 'Religious']
+    },
+    {
+      id: 'faction-2',
+      name: names[1],
+      description: 'A secretive group with hidden agendas',
+      goals: ['Accumulate power', 'Control information', 'Eliminate rivals'],
+      resources: ['Spy network', 'Dark magic', 'Forbidden knowledge'],
+      members: ['char-3'],
+      relationships: [],
+      power: 60,
+      influence: ['Underground', 'Economic']
+    }
+  ]
+}
+
+function generateSubplots() {
+  return [
+    {
+      id: 'subplot-1',
+      title: 'The Lost Artifact',
+      description: 'A powerful item from the past holds the key to victory',
+      characters: ['char-1', 'char-2'],
+      resolution: 'The artifact is found but at great cost',
+      impact: 'major' as const,
+      status: 'planned' as const
+    },
+    {
+      id: 'subplot-2',
+      title: 'Unlikely Alliance', 
+      description: 'Former enemies must work together',
+      characters: ['char-2', 'char-3'],
+      impact: 'moderate' as const,
+      status: 'active' as const
+    }
+  ]
+}
+
+function generateTimeline() {
+  return [
+    {
+      id: 'event-1',
+      title: 'The Ancient War',
+      description: 'A great conflict that shaped the current world',
+      date: '1000 years ago',
+      type: 'backstory' as const,
+      consequences: ['Current political structure', 'Ancient ruins scattered across the land']
+    },
+    {
+      id: 'event-2',
+      title: 'The Hero\'s Birth',
+      description: 'The protagonist enters the world',
+      date: '20 years ago',
+      type: 'backstory' as const,
+      characters: ['char-1']
+    },
+    {
+      id: 'event-3',
+      title: 'The Inciting Incident',
+      description: 'The event that begins the main story',
+      date: 'Present day',
+      type: 'main-story' as const,
+      characters: ['char-1', 'char-2'],
+      consequences: ['The hero\'s journey begins']
+    }
+  ]
+}
+
+// Asset Generation Function
+export async function generateAssets(params: { 
+  prompt: string, 
+  type: 'art' | 'audio' | 'model' | 'ui', 
+  category: string, 
+  style?: string, 
+  resolution?: string, 
+  format?: string 
+}) {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 2000))
+  
+  const assetId = `${params.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const timestamp = new Date().toISOString()
+  
+  if (params.type === 'art') {
+    return [{
+      id: assetId,
+      name: generateAssetName(params.prompt, params.type),
+      type: params.category,
+      category: params.category,
+      status: 'approved' as const,
+      src: '/api/placeholder/512/512',
+      thumbnail: '/api/placeholder/256/256',
+      prompt: params.prompt,
+      style: params.style || 'realistic',
+      resolution: params.resolution || '512x512',
+      format: params.format || 'png',
+      tags: generateAssetTags(params.prompt, params.type),
+      variations: [],
+      linkedTo: [],
+      metadata: {
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        usageCount: 0,
+        collections: [],
+        quality: ['good', 'excellent'][Math.floor(Math.random() * 2)] as 'good' | 'excellent',
+        aiGenerated: true,
+        originalPrompt: params.prompt
+      }
+    }]
+  } else if (params.type === 'audio') {
+    return [{
+      id: assetId,
+      name: generateAssetName(params.prompt, params.type),
+      type: params.category,
+      category: params.category,
+      status: 'approved' as const,
+      src: '/api/placeholder-audio/generated.mp3',
+      duration: 60 + Math.random() * 180,
+      prompt: params.prompt,
+      style: params.style || 'cinematic',
+      bpm: 120 + Math.floor(Math.random() * 80),
+      key: ['C', 'D', 'E', 'F', 'G', 'A', 'B'][Math.floor(Math.random() * 7)] + ['', 'm'][Math.floor(Math.random() * 2)],
+      tags: generateAssetTags(params.prompt, params.type),
+      variations: [],
+      linkedTo: [],
+      metadata: {
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        usageCount: 0,
+        collections: [],
+        quality: ['good', 'excellent'][Math.floor(Math.random() * 2)] as 'good' | 'excellent',
+        aiGenerated: true,
+        originalPrompt: params.prompt
+      }
+    }]
+  } else if (params.type === 'model') {
+    return [{
+      id: assetId,
+      name: generateAssetName(params.prompt, params.type),
+      type: params.category,
+      category: params.category,
+      status: 'approved' as const,
+      src: '/api/placeholder-model/generated.obj',
+      thumbnail: '/api/placeholder/256/256',
+      polyCount: 1000 + Math.floor(Math.random() * 9000),
+      prompt: params.prompt,
+      style: params.style || 'stylized',
+      format: 'obj',
+      tags: generateAssetTags(params.prompt, params.type),
+      variations: [],
+      linkedTo: [],
+      metadata: {
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        usageCount: 0,
+        collections: [],
+        quality: ['good', 'excellent'][Math.floor(Math.random() * 2)] as 'good' | 'excellent',
+        aiGenerated: true,
+        originalPrompt: params.prompt
+      }
+    }]
+  } else { // ui
+    return [{
+      id: assetId,
+      name: generateAssetName(params.prompt, params.type),
+      type: params.category,
+      category: params.category,
+      status: 'approved' as const,
+      src: '/api/placeholder/256/256',
+      thumbnail: '/api/placeholder/128/128',
+      prompt: params.prompt,
+      style: params.style || 'modern',
+      resolution: params.resolution || '256x256',
+      format: params.format || 'png',
+      tags: generateAssetTags(params.prompt, params.type),
+      variations: [],
+      linkedTo: [],
+      metadata: {
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        usageCount: 0,
+        collections: [],
+        quality: ['good', 'excellent'][Math.floor(Math.random() * 2)] as 'good' | 'excellent',
+        aiGenerated: true,
+        originalPrompt: params.prompt
+      }
+    }]
+  }
+}
+
+function generateAssetName(prompt: string, type: string): string {
+  const words = prompt.split(' ').filter(w => w.length > 2).slice(0, 3)
+  const baseName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  
+  const typeNames = {
+    art: ['Artwork', 'Illustration', 'Concept', 'Visual'],
+    audio: ['Track', 'Theme', 'Sound', 'Music'],
+    model: ['Model', 'Asset', 'Object', '3D Asset'],
+    ui: ['Icon', 'Interface', 'UI Element', 'Button']
+  }
+  
+  const suffix = typeNames[type as keyof typeof typeNames]?.[Math.floor(Math.random() * 4)] || 'Asset'
+  return baseName ? `${baseName} ${suffix}` : `Generated ${suffix}`
+}
+
+function generateAssetTags(prompt: string, type: string): string[] {
+  const promptWords = prompt.toLowerCase().split(' ').filter(w => w.length > 2)
+  const baseTags = promptWords.slice(0, 3)
+  
+  const typeTags = {
+    art: ['artwork', 'visual', 'illustration'],
+    audio: ['audio', 'sound', 'music'],
+    model: ['3d', 'model', 'object'],
+    ui: ['ui', 'interface', 'icon']
+  }
+  
+  const qualityTags = ['high-quality', 'ai-generated', 'game-ready']
+  
+  return [
+    ...baseTags,
+    ...(typeTags[type as keyof typeof typeTags] || []),
+    ...qualityTags.slice(0, 1 + Math.floor(Math.random() * 2))
+  ].slice(0, 6)
+}

@@ -1,26 +1,30 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { NavigationSection } from '@/lib/types'
+import { NavigationSection, GameProject } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { 
-  House,
-  FolderOpen,
-  BookOpen,
-  Palette,
-  GameController,
-  TestTube,
-  Rocket,
-  Sparkle,
-  List,
-  X
-} from '@phosphor-icons/react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+// Import icons directly to bypass proxy issues
+import { House } from '@phosphor-icons/react/dist/csr/House'
+import { FolderOpen } from '@phosphor-icons/react/dist/csr/FolderOpen'
+import { Book } from '@phosphor-icons/react/dist/csr/Book'
+import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
+import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
+import { TestTube } from '@phosphor-icons/react/dist/csr/TestTube'
+import { MonitorPlay } from '@phosphor-icons/react/dist/csr/MonitorPlay'
+import { Rocket } from '@phosphor-icons/react/dist/csr/Rocket'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { List } from '@phosphor-icons/react/dist/csr/List'
+import { X } from '@phosphor-icons/react/dist/csr/X'
 import { cn } from '@/lib/utils'
 
 interface GameStudioSidebarProps {
   currentSection: string
   onSectionChange: (sectionId: string) => void
+  projects?: GameProject[]
+  selectedProject?: GameProject | null
+  onProjectSelect?: (project: GameProject) => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
   className?: string
@@ -43,7 +47,7 @@ const navigationSections: NavigationSection[] = [
   {
     id: 'story',
     name: 'Story & Lore',
-    icon: BookOpen,
+    icon: Book,
     path: '/story'
   },
   {
@@ -65,6 +69,12 @@ const navigationSections: NavigationSection[] = [
     path: '/qa'
   },
   {
+    id: 'preview',
+    name: 'Preview',
+    icon: MonitorPlay,
+    path: '/preview'
+  },
+  {
     id: 'publishing',
     name: 'Publishing',
     icon: Rocket,
@@ -75,6 +85,9 @@ const navigationSections: NavigationSection[] = [
 export function GameStudioSidebar({
   currentSection,
   onSectionChange,
+  projects = [],
+  selectedProject,
+  onProjectSelect,
   isCollapsed = false,
   onToggleCollapse,
   className
@@ -125,6 +138,52 @@ export function GameStudioSidebar({
 
       {/* Navigation */}
       <ScrollArea className="flex-1 p-4 custom-scrollbar">
+        {/* Project Selector */}
+        <AnimatePresence>
+          {!isCollapsed && projects.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="mb-4"
+            >
+              <div className="px-2 pb-2">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Current Project</p>
+                <Select 
+                  value={selectedProject?.id || ""} 
+                  onValueChange={(projectId) => {
+                    const project = projects.find(p => p.id === projectId)
+                    if (project && onProjectSelect) {
+                      onProjectSelect(project)
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full h-9 text-sm">
+                    <SelectValue placeholder="Select a project..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            project.status === 'complete' ? 'bg-green-500' :
+                            project.status === 'development' ? 'bg-blue-500' :
+                            project.status === 'testing' ? 'bg-yellow-500' :
+                            'bg-gray-500'
+                          }`} />
+                          <span className="truncate">{project.title}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Separator className="mb-4 bg-border/30" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <nav className="space-y-2">
           {navigationSections.map((section, index) => {
             const Icon = section.icon

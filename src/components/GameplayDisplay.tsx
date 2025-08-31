@@ -4,18 +4,16 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { 
-  Gamepad2, 
-  Gear, 
-  Target, 
-  CheckCircle, 
-  Clock,
-  Trophy,
-  TrendUp,
-  Lightning,
-  Play,
-  MapTrifold
-} from '@phosphor-icons/react'
+import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
+import { Gear } from '@phosphor-icons/react/dist/csr/Gear'
+import { Target } from '@phosphor-icons/react/dist/csr/Target'
+import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { Trophy } from '@phosphor-icons/react/dist/csr/Trophy'
+import { TrendUp } from '@phosphor-icons/react/dist/csr/TrendUp'
+import { Lightning } from '@phosphor-icons/react/dist/csr/Lightning'
+import { Play } from '@phosphor-icons/react/dist/csr/Play'
+import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import { cn } from '@/lib/utils'
 
 interface GameplayDisplayProps {
@@ -67,7 +65,7 @@ export function GameplayDisplay({ gameplay, className }: GameplayDisplayProps) {
         <Card className="glass-card p-6 space-y-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full gradient-cosmic flex items-center justify-center">
-              <Gamepad2 size={20} className="text-white" />
+              <GameController size={20} className="text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">Gameplay Systems</h2>
@@ -258,7 +256,7 @@ export function GameplayDisplay({ gameplay, className }: GameplayDisplayProps) {
                             </div>
                             
                             <div className="flex items-center gap-2">
-                              <Gamepad2 size={14} className="text-purple-400" />
+                              <GameController size={14} className="text-purple-400" />
                               <span className="text-muted-foreground">Mechanics:</span>
                               <span className="font-medium text-purple-400">{level.mechanics.length}</span>
                             </div>

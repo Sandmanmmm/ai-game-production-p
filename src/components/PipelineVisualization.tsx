@@ -3,18 +3,16 @@ import { PipelineStage } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Lightbulb, 
-  BookOpen, 
-  Palette, 
-  GameController, 
-  TestTube, 
-  Rocket,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Warning
-} from '@phosphor-icons/react'
+import { Lightbulb } from '@phosphor-icons/react/dist/csr/Lightbulb'
+import { Book } from '@phosphor-icons/react/dist/csr/Book'
+import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
+import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
+import { TestTube } from '@phosphor-icons/react/dist/csr/TestTube'
+import { Rocket } from '@phosphor-icons/react/dist/csr/Rocket'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { XCircle } from '@phosphor-icons/react/dist/csr/XCircle'
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning'
 import { cn } from '@/lib/utils'
 
 interface PipelineVisualizationProps {
@@ -25,7 +23,7 @@ interface PipelineVisualizationProps {
 
 const stageIcons = {
   concept: Lightbulb,
-  story: BookOpen,
+  story: Book,
   assets: Palette,
   gameplay: GameController,
   qa: TestTube,

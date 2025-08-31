@@ -4,17 +4,15 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { 
-  BookOpen, 
-  User, 
-  Crown, 
-  Sword, 
-  Users, 
-  MapPin,
-  Heart,
-  Target,
-  Sparkle
-} from '@phosphor-icons/react'
+import { Book } from '@phosphor-icons/react/dist/csr/Book'
+import { User } from '@phosphor-icons/react/dist/csr/User'
+import { Crown } from '@phosphor-icons/react/dist/csr/Crown'
+import { Sword } from '@phosphor-icons/react/dist/csr/Sword'
+import { Users } from '@phosphor-icons/react/dist/csr/Users'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { Target } from '@phosphor-icons/react/dist/csr/Target'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { cn } from '@/lib/utils'
 
 interface StoryDisplayProps {
@@ -59,7 +57,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
         <Card className="glass-card p-6 space-y-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full gradient-cosmic flex items-center justify-center">
-              <BookOpen size={20} className="text-white" />
+              <Book size={20} className="text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">Story Overview</h2>
@@ -113,7 +111,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
           {/* Themes */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <BookOpen size={16} className="text-accent" />
+              <Book size={16} className="text-accent" />
               <span className="font-medium text-foreground">Core Themes</span>
             </div>
             <div className="flex flex-wrap gap-2">

@@ -1,36 +1,35 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { GameProject, PipelineStage } from '@/lib/types'
-import { PipelineVisualization } from '@/components/PipelineVisualization'
-import { AIAssistant } from '@/components/AIAssistant'
-import { AssetGallery } from '@/components/AssetGallery'
-import { StoryDisplay } from '@/components/StoryDisplay'
-import { GameplayDisplay } from '@/components/GameplayDisplay'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  ArrowLeft,
-  BookOpen,
-  Palette,
-  GameController,
-  TestTube,
-  Rocket,
-  Calendar,
-  Clock,
-  Users,
-  Target,
-  Sparkle,
-  Play,
-  Pause,
-  Robot,
-  ChartLine
-} from '@phosphor-icons/react'
-import { cn } from '@/lib/utils'
+import { GameProject, PipelineStage } from '../lib/types'
+import { PipelineVisualization } from './PipelineVisualization'
+import { AIAssistant } from './AIAssistant'
+import { AssetGallery } from './AssetGallery'
+import { AssetEditingStudio } from './AssetEditingStudio'
+import { StoryDisplay } from './StoryDisplay'
+import { GameplayDisplay } from './GameplayDisplay'
+import { Card } from './ui/card'
+import { Button } from './ui/button'
+import { Badge } from './ui/badge'
+import { Progress } from './ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import { Separator } from './ui/separator'
+import { ScrollArea } from './ui/scroll-area'
+import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
+import { Book } from '@phosphor-icons/react/dist/csr/Book'
+import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
+import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
+import { TestTube } from '@phosphor-icons/react/dist/csr/TestTube'
+import { Rocket } from '@phosphor-icons/react/dist/csr/Rocket'
+import { Calendar } from '@phosphor-icons/react/dist/csr/Calendar'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { Users } from '@phosphor-icons/react/dist/csr/Users'
+import { Target } from '@phosphor-icons/react/dist/csr/Target'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { Play } from '@phosphor-icons/react/dist/csr/Play'
+import { Pause } from '@phosphor-icons/react/dist/csr/Pause'
+import { Robot } from '@phosphor-icons/react/dist/csr/Robot'
+import { ChartLine } from '@phosphor-icons/react/dist/csr/ChartLine'
+import { cn } from '../lib/utils'
 
 interface ProjectDetailViewProps {
   project: GameProject
@@ -41,6 +40,29 @@ interface ProjectDetailViewProps {
 export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDetailViewProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [isAIMinimized, setIsAIMinimized] = useState(false)
+  const [editingAsset, setEditingAsset] = useState<any>(null)
+
+  console.log('🚨 ProjectDetailView MOUNTED:', {
+    projectId: project?.id,
+    projectTitle: project?.title,
+    activeTab: activeTab,
+    hasAssets: !!project?.assets
+  })
+
+  // Add state change logger
+  const handleTabChange = (newTab: string) => {
+    console.log('🎯 TAB CHANGED:', { from: activeTab, to: newTab })
+    setActiveTab(newTab)
+  }
+
+  const handleEditAsset = (asset: any) => {
+    console.log('Edit asset clicked:', asset)
+    setEditingAsset(asset)
+  }
+
+  const handleCloseAssetEditor = () => {
+    setEditingAsset(null)
+  }
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -57,6 +79,10 @@ export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDet
 
   return (
     <div className="flex h-full">
+      {(() => {
+        console.log('🔥 ProjectDetailView RENDER:', Date.now())
+        return null
+      })()}
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
@@ -106,17 +132,17 @@ export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDet
 
         {/* Content */}
         <div className="flex-1 overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
             <TabsList className="mx-6 mt-4 mb-2 glass">
               <TabsTrigger value="overview" className="gap-2">
                 <Target size={16} />
                 Overview
               </TabsTrigger>
               <TabsTrigger value="story" className="gap-2">
-                <BookOpen size={16} />
+                <Book size={16} />
                 Story & Lore
               </TabsTrigger>
-              <TabsTrigger value="assets" className="gap-2">
+              <TabsTrigger value="assets" className="gap-2" onClick={() => console.log('🎯 Assets tab clicked!')}>
                 <Palette size={16} />
                 Assets
               </TabsTrigger>
@@ -133,6 +159,18 @@ export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDet
                 Publishing
               </TabsTrigger>
             </TabsList>
+
+            {(() => {
+              console.log('🎯 TAB DEBUG:', {
+                activeTab: activeTab,
+                tabValue: activeTab,
+                isAssetsTab: activeTab === 'assets',
+                projectExists: !!project,
+                projectId: project?.id,
+                hasAssets: !!project?.assets
+              })
+              return null
+            })()}
 
             <div className="flex-1 overflow-hidden">
               <TabsContent value="overview" className="h-full m-0 p-6">
@@ -214,7 +252,7 @@ export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDet
                       <StoryDisplay story={project.story} />
                     ) : (
                       <Card className="glass-card p-8 text-center space-y-4">
-                        <BookOpen size={48} className="text-muted-foreground mx-auto" />
+                        <Book size={48} className="text-muted-foreground mx-auto" />
                         <div>
                           <h3 className="text-xl font-semibold text-foreground mb-2">Story Coming Soon</h3>
                           <p className="text-muted-foreground mb-6">
@@ -232,6 +270,16 @@ export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDet
               </TabsContent>
 
               <TabsContent value="assets" className="h-full m-0 p-6">
+                {(() => {
+                  console.log('🎨 ASSETS TABCONTENT RENDERING:', {
+                    activeTab: activeTab,
+                    isAssetsTab: activeTab === 'assets',
+                    project: project,
+                    projectAssets: project?.assets,
+                    shouldRender: true
+                  })
+                  return null
+                })()}
                 <ScrollArea className="h-full custom-scrollbar">
                   <div className="space-y-6 max-w-6xl">
                     <div className="flex items-center justify-between">
@@ -244,12 +292,36 @@ export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDet
                       )}
                     </div>
                     
-                    {project.assets && (project.assets.art.length > 0 || project.assets.audio.length > 0 || project.assets.models.length > 0) ? (
-                      <AssetGallery
-                        artAssets={project.assets.art}
-                        audioAssets={project.assets.audio}
-                        modelAssets={project.assets.models}
-                      />
+                    {(() => {
+                      console.log('🎨 ProjectDetailView - Project Assets:', project.assets)
+                      console.log('🎨 Full Project Object:', project)
+                      console.log('🎨 Art Assets:', project.assets?.art)
+                      console.log('🎨 Audio Assets:', project.assets?.audio)
+                      console.log('🎨 Model Assets:', project.assets?.models)
+                      console.log('🎨 Art Assets Length:', project.assets?.art?.length || 0)
+                      console.log('🎨 Audio Assets Length:', project.assets?.audio?.length || 0)
+                      console.log('🎨 Model Assets Length:', project.assets?.models?.length || 0)
+                      console.log('🎨 Active Tab:', activeTab)
+                      console.log('🎨 Should Show AssetGallery:', activeTab === 'assets' && !!project.assets)
+                      return null
+                    })()}
+                    
+                    {/* TEMPORARY: Always show AssetGallery for debugging */}
+                    {project.assets ? (
+                      <>
+                        <div style={{padding: '10px', background: 'rgba(255,0,0,0.1)', margin: '10px 0'}}>
+                          <strong>DEBUG: Rendering AssetGallery with:</strong>
+                          <br />Art: {project.assets.art?.length || 0} assets
+                          <br />Audio: {project.assets.audio?.length || 0} assets  
+                          <br />Models: {project.assets.models?.length || 0} assets
+                        </div>
+                        <AssetGallery
+                          artAssets={project.assets.art || []}
+                          audioAssets={project.assets.audio || []}
+                          modelAssets={project.assets.models || []}
+                          onEdit={handleEditAsset}
+                        />
+                      </>
                     ) : (
                       <Card className="glass-card p-8 text-center space-y-4">
                         <Palette size={48} className="text-muted-foreground mx-auto" />
@@ -527,6 +599,14 @@ export function ProjectDetailView({ project, onBack, onQAWorkspace }: ProjectDet
         isMinimized={isAIMinimized}
         onToggleMinimize={() => setIsAIMinimized(false)}
       />
+
+      {/* Asset Editing Studio - Full Screen Overlay */}
+      {editingAsset && (
+        <AssetEditingStudio
+          asset={editingAsset}
+          onClose={handleCloseAssetEditor}
+        />
+      )}
     </div>
   )
 }

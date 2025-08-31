@@ -1,5 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Circle, Zap, Brain, Palette, Gamepad2, Bug, Rocket } from '@phosphor-icons/react'
+import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { Circle } from '@phosphor-icons/react/dist/csr/Circle'
+import { Lightning } from '@phosphor-icons/react/dist/csr/Lightning'
+import { Brain } from '@phosphor-icons/react/dist/csr/Brain'
+import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
+import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
+import { Bug } from '@phosphor-icons/react/dist/csr/Bug'
+import { Rocket } from '@phosphor-icons/react/dist/csr/Rocket'
 import { cn } from '@/lib/utils'
 
 interface PipelineStage {
@@ -246,7 +253,7 @@ export function PipelineVisualizer({ stages, currentStage, className }: Pipeline
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   >
-                    <Zap size={20} className="text-accent" />
+                    <Lightning size={20} className="text-accent" />
                   </motion.div>
                 </div>
               </div>
@@ -277,7 +284,7 @@ export function createPipelineStages(): PipelineStage[] {
     {
       id: 'gameplay',
       name: 'Gameplay',
-      icon: Gamepad2,
+      icon: GameController,
       status: 'pending',
       progress: 0
     },

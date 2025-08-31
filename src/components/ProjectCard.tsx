@@ -3,7 +3,9 @@ import { GameProject } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Clock, Calendar, Gamepad2 } from '@phosphor-icons/react'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { Calendar } from '@phosphor-icons/react/dist/csr/Calendar'
+import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
 import { cn } from '@/lib/utils'
 
 interface ProjectCardProps {
@@ -45,7 +47,10 @@ export function ProjectCard({ project, onClick, className }: ProjectCardProps) {
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn('cursor-pointer group', className)}
-      onClick={() => onClick(project)}
+      onClick={() => {
+        console.log('🎯 CARD: Project clicked:', project.title)
+        onClick(project)
+      }}
     >
       <Card className="glass-card p-6 h-full transition-all duration-300 group-hover:glow-purple border-border/50 group-hover:border-accent/50">
         <div className="space-y-4">
@@ -87,7 +92,7 @@ export function ProjectCard({ project, onClick, className }: ProjectCardProps) {
           {/* Stats */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Gamepad2 size={14} />
+              <GameController size={14} />
               <span>{project.story?.genre || 'Adventure'}</span>
             </div>
             <div className="flex items-center gap-1">
@@ -148,7 +153,7 @@ export function EmptyProjectCard({ onCreateProject }: { onCreateProject: () => v
       <Card className="glass-card p-8 h-full border-2 border-dashed border-border/50 group-hover:border-accent/50 transition-all duration-300 group-hover:glow-gold">
         <div className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 rounded-full bg-accent/20 flex items-center justify-center group-hover:bg-accent/30 transition-colors duration-300">
-            <Gamepad2 size={32} className="text-accent" />
+            <GameController size={32} className="text-accent" />
           </div>
           <div>
             <h3 className="font-semibold text-lg text-foreground mb-2">

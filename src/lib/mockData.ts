@@ -1,7 +1,7 @@
 import { GameProject, PipelineStage, AIAssistantMessage } from './types'
 
 export const generateMockProject = (prompt: string): GameProject => {
-  const id = `project_${Date.now()}`
+  const id = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   const title = generateGameTitle(prompt)
   
   return {
@@ -23,9 +23,76 @@ export const generateMockProject = (prompt: string): GameProject => {
       targetAudience: 'Teen and Adult gamers'
     },
     assets: {
-      art: [],
-      audio: [],
-      models: []
+      art: [
+        {
+          id: 'art_hero_concept',
+          name: 'Hero Character Concept',
+          type: 'character',
+          category: 'character',
+          status: 'approved',
+          tags: ['hero', 'character', 'concept'],
+          thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop'
+        },
+        {
+          id: 'art_environment',
+          name: 'Forest Environment',
+          type: 'environment',
+          category: 'environment',
+          status: 'in-progress',
+          tags: ['forest', 'environment', 'background'],
+          thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop'
+        },
+        {
+          id: 'art_ui_mockup',
+          name: 'Game UI Mockup',
+          type: 'ui',
+          category: 'ui',
+          status: 'review',
+          tags: ['ui', 'interface', 'hud'],
+          thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop'
+        }
+      ],
+      audio: [
+        {
+          id: 'audio_theme',
+          name: 'Main Theme Music',
+          type: 'music',
+          category: 'music',
+          status: 'approved',
+          tags: ['theme', 'orchestral', 'epic'],
+          duration: 180
+        },
+        {
+          id: 'audio_combat',
+          name: 'Combat Sound Effects',
+          type: 'sfx',
+          category: 'sound-fx',
+          status: 'in-progress',
+          tags: ['combat', 'sfx', 'action'],
+          duration: 45
+        }
+      ],
+      models: [
+        {
+          id: 'model_hero',
+          name: 'Hero 3D Model',
+          type: '3d',
+          category: 'character',
+          status: 'review',
+          tags: ['hero', 'low-poly', 'rigged'],
+          polyCount: 5420
+        },
+        {
+          id: 'model_sword',
+          name: 'Magic Sword',
+          type: '3d',
+          category: 'prop',
+          status: 'approved',
+          tags: ['weapon', 'magic', 'prop'],
+          polyCount: 1200
+        }
+      ],
+      ui: []
     },
     gameplay: {
       mechanics: [],

@@ -5,20 +5,18 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  X, 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Settings, 
-  MessageSquare,
-  Code,
-  Volume2,
-  VolumeX,
-  Zap,
-  Bug,
-  CheckCircle
-} from '@phosphor-icons/react'
+import { X } from '@phosphor-icons/react/dist/csr/X'
+import { Play } from '@phosphor-icons/react/dist/csr/Play'
+import { Pause } from '@phosphor-icons/react/dist/csr/Pause'
+import { ArrowCounterClockwise } from '@phosphor-icons/react/dist/csr/ArrowCounterClockwise'
+import { Gear } from '@phosphor-icons/react/dist/csr/Gear'
+import { ChatText } from '@phosphor-icons/react/dist/csr/ChatText'
+import { Code } from '@phosphor-icons/react/dist/csr/Code'
+import { SpeakerHigh } from '@phosphor-icons/react/dist/csr/SpeakerHigh'
+import { SpeakerX } from '@phosphor-icons/react/dist/csr/SpeakerX'
+import { Lightning } from '@phosphor-icons/react/dist/csr/Lightning'
+import { Bug } from '@phosphor-icons/react/dist/csr/Bug'
+import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
 import { toast } from 'sonner'
 
 interface QAWorkspaceProps {
@@ -65,7 +63,7 @@ export function QAWorkspace({ project, onClose }: QAWorkspaceProps) {
   const [musicEnabled, setMusicEnabled] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const gameLoopRef = useRef<NodeJS.Timeout>()
+  const gameLoopRef = useRef<number | null>(null)
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -200,9 +198,9 @@ export function QAWorkspace({ project, onClose }: QAWorkspaceProps) {
   const getMessageIcon = (type: AIMessage['type']) => {
     switch (type) {
       case 'observation': return <Bug className="w-4 h-4" />
-      case 'suggestion': return <Zap className="w-4 h-4" />
-      case 'fix': return <Settings className="w-4 h-4" />
-      default: return <MessageSquare className="w-4 h-4" />
+      case 'suggestion': return <Lightning className="w-4 h-4" />
+      case 'fix': return <Gear className="w-4 h-4" />
+      default: return <ChatText className="w-4 h-4" />
     }
   }
 
@@ -267,7 +265,7 @@ export function QAWorkspace({ project, onClose }: QAWorkspaceProps) {
             onClick={() => setMusicEnabled(!musicEnabled)}
             className="gap-2"
           >
-            {musicEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {musicEnabled ? <SpeakerHigh className="w-4 h-4" /> : <SpeakerX className="w-4 h-4" />}
             Focus Music
           </Button>
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -281,7 +279,7 @@ export function QAWorkspace({ project, onClose }: QAWorkspaceProps) {
         {/* Left Panel - AI Assistant Chat */}
         <div className="w-80 border-r border-border/50 bg-card/30 backdrop-blur-sm flex flex-col">
           <div className="h-12 border-b border-border/50 flex items-center px-4 bg-card/50">
-            <MessageSquare className="w-5 h-5 text-accent mr-2" />
+            <ChatText className="w-5 h-5 text-accent mr-2" />
             <span className="font-medium text-foreground">AI Testing Assistant</span>
           </div>
           
@@ -327,7 +325,7 @@ export function QAWorkspace({ project, onClose }: QAWorkspaceProps) {
                 }}
               />
               <Button size="sm" onClick={handleSendMessage}>
-                <MessageSquare className="w-4 h-4" />
+                <ChatText className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -348,7 +346,7 @@ export function QAWorkspace({ project, onClose }: QAWorkspaceProps) {
                 {gameState.isPlaying ? 'Pause' : 'Play'}
               </Button>
               <Button variant="outline" size="sm" onClick={handleReset} className="gap-2">
-                <RotateCcw className="w-4 h-4" />
+                <ArrowCounterClockwise className="w-4 h-4" />
                 Reset
               </Button>
             </div>

@@ -260,3 +260,95 @@
     --color-bg-overlay: var(--color-neutral-3);
   }
 }
+
+/* Story & Lore Workspace Styles */
+.story-workspace {
+  background: linear-gradient(135deg, var(--background) 0%, var(--background) 80%, rgba(var(--accent), 0.05) 100%);
+}
+
+.character-card {
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, rgba(var(--accent), 0.05) 0%, rgba(var(--primary), 0.02) 100%);
+}
+
+.character-card:hover {
+  box-shadow: 0 10px 25px rgba(var(--accent), 0.1);
+  border-color: rgba(var(--accent), 0.3);
+}
+
+/* Story content animations */
+.story-fade-in {
+  animation: storyFadeIn 0.6s ease-out forwards;
+}
+
+@keyframes storyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.story-slide-in {
+  animation: storySlideIn 0.4s ease-out forwards;
+}
+
+@keyframes storySlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Gameplay Studio Styles */
+.canvas-glow {
+  box-shadow: 
+    0 0 20px rgba(var(--primary-rgb, 168, 85, 247), 0.3),
+    0 0 40px rgba(var(--primary-rgb, 168, 85, 247), 0.15),
+    inset 0 0 20px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 40, 0.9) 100%);
+}
+
+.canvas-glow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    rgba(var(--primary-rgb, 168, 85, 247), 0.6),
+    rgba(var(--accent-rgb, 59, 130, 246), 0.4),
+    rgba(var(--primary-rgb, 168, 85, 247), 0.6)
+  );
+  border-radius: inherit;
+  z-index: -1;
+  animation: glowPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.gameplay-panel-enter {
+  animation: panelSlideIn 0.5s ease-out forwards;
+}
+
+@keyframes panelSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

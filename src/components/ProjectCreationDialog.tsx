@@ -10,17 +10,14 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Sparkle, 
-  GameController, 
-  Wand, 
-  Lightning,
-  PaperPlaneRight,
-  Brain,
-  Palette,
-  Gamepad2,
-  Bug
-} from '@phosphor-icons/react'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
+import { MagicWand } from '@phosphor-icons/react/dist/csr/MagicWand'
+import { Lightning } from '@phosphor-icons/react/dist/csr/Lightning'
+import { PaperPlaneRight } from '@phosphor-icons/react/dist/csr/PaperPlaneRight'
+import { Brain } from '@phosphor-icons/react/dist/csr/Brain'
+import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
+import { Bug } from '@phosphor-icons/react/dist/csr/Bug'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -69,7 +66,7 @@ export function ProjectCreationDialog({
       // Switch to pipeline view
       setTimeout(() => {
         setCurrentPhase('pipeline')
-        startAIPipeline()
+        startAIPipeline(baseProject) // Pass the project directly
       }, 1500)
 
     } catch (error) {
@@ -80,7 +77,7 @@ export function ProjectCreationDialog({
     }
   }
 
-  const startAIPipeline = async () => {
+  const startAIPipeline = async (currentProject: GameProject) => {
     const stages = [...pipelineStages]
     
     try {
@@ -128,13 +125,13 @@ export function ProjectCreationDialog({
       }
 
       // QA Ready callback - opens QA workspace when QA stage completes
-      const onQAReady = (generatedContent?: Partial<GameProject>) => {
-        console.log('🔬 QA Ready callback triggered!', { generatedProject, onQAWorkspace, generatedContent })
+      const onQAReady = (generatedContent?: Partial<GameProject>): boolean => {
+        console.log('🔬 QA Ready callback triggered!', { currentProject, onQAWorkspace, generatedContent })
         
-        if (generatedProject && onQAWorkspace) {
+        if (currentProject && onQAWorkspace) {
           // Create enhanced project with QA stage complete
           const enhancedProject: GameProject = {
-            ...generatedProject,
+            ...currentProject,
             ...generatedContent, // Include all the AI generated content
             pipeline: stages.map(stage => ({
               id: stage.id,
@@ -175,10 +172,10 @@ export function ProjectCreationDialog({
       console.log('✅ AI pipeline generation completed', { generatedContent })
 
       // If QA callback wasn't triggered or didn't handle it, complete normally
-      if (generatedProject && Object.keys(generatedContent).length > 0) {
+      if (currentProject && Object.keys(generatedContent).length > 0) {
         console.log('⚠️ Falling back to normal project completion (no QA workspace or not handled)')
         const enhancedProject: GameProject = {
-          ...generatedProject,
+          ...currentProject,
           ...generatedContent,
           pipeline: stages.map(stage => ({
             id: stage.id,
@@ -204,8 +201,8 @@ export function ProjectCreationDialog({
       console.error('Error in AI pipeline:', error)
       toast.error('Error generating AI content. Using basic project.')
       
-      if (generatedProject) {
-        onProjectCreated(generatedProject)
+      if (currentProject) {
+        onProjectCreated(currentProject)
       }
       handleClose()
     }
@@ -401,7 +398,7 @@ export function ProjectCreationDialog({
                     >
                       {currentPipelineStage === 'story' && <Brain size={20} />}
                       {currentPipelineStage === 'assets' && <Palette size={20} />}
-                      {currentPipelineStage === 'gameplay' && <Gamepad2 size={20} />}
+                      {currentPipelineStage === 'gameplay' && <GameController size={20} />}
                       {currentPipelineStage === 'qa' && <Bug size={20} />}
                     </motion.div>
                     <span className="font-medium">
