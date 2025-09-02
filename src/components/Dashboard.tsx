@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { GameProject } from '@/lib/types'
 import { ProjectCard, EmptyProjectCard } from '@/components/ProjectCard'
 import { PipelineVisualization } from '@/components/PipelineVisualization'
-import { ProjectCreationDialog } from '@/components/ProjectCreationDialog'
+import { EnhancedProjectCreationDialog } from '@/components/EnhancedProjectCreationDialog'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,11 +27,13 @@ import { useKV } from '@github/spark/hooks'
 interface DashboardProps {
   onProjectSelect: (project: GameProject) => void
   onQAWorkspace?: (project: GameProject) => void
+  projects: GameProject[]
+  onProjectsChange: (projects: GameProject[]) => void
 }
 
-export function Dashboard({ onProjectSelect, onQAWorkspace }: DashboardProps) {
-  console.log('🎯 DASHBOARD: Component mounted, onProjectSelect type:', typeof onProjectSelect)
-  const [projects, setProjects] = useKV<GameProject[]>('game_projects', [])
+export function Dashboard({ onProjectSelect, onQAWorkspace, projects, onProjectsChange }: DashboardProps) {
+  console.log('🎯 DASHBOARD: Component mounted with', projects.length, 'projects')
+  console.log('🎯 DASHBOARD: Projects:', projects.map(p => ({ id: p.id, title: p.title })))
   const [searchQuery, setSearchQuery] = useState('')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -57,11 +59,9 @@ export function Dashboard({ onProjectSelect, onQAWorkspace }: DashboardProps) {
 
   const handleProjectCreated = (newProject: GameProject) => {
     console.log('💾 Saving new project:', newProject.title)
-    setProjects(currentProjects => {
-      const updated = [...currentProjects, newProject]
-      console.log('💾 Projects updated, total count:', updated.length)
-      return updated
-    })
+    const updated = [...projects, newProject]
+    console.log('💾 Projects updated, total count:', updated.length)
+    onProjectsChange(updated)
   }
 
   // Dashboard stats
@@ -308,8 +308,8 @@ export function Dashboard({ onProjectSelect, onQAWorkspace }: DashboardProps) {
         </TabsContent>
       </Tabs>
 
-      {/* Project Creation Dialog */}
-      <ProjectCreationDialog
+      {/* Enhanced Project Creation Dialog */}
+      <EnhancedProjectCreationDialog
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onProjectCreated={handleProjectCreated}

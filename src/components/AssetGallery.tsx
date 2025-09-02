@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AIAssetGenerator } from './AIAssetGenerator'
+import { GeneratedAsset } from '../lib/assetStorage'
 import { 
   Play 
 } from '@phosphor-icons/react/dist/csr/Play'
@@ -169,8 +171,7 @@ const isPlaceholderAsset = (asset: GameAsset): boolean => {
   const thumbnail = getAssetThumbnail(asset)
   const imageUrl = asset.src || thumbnail
   
-  console.log('🔍 PLACEHOLDER DEBUG:', {
-    assetName: asset.name,
+  console.log('🔍 PLACEHOLDER CHECK for:', asset.name, {
     assetId: asset.id,
     src: asset.src,
     thumbnail: thumbnail,
@@ -179,14 +180,14 @@ const isPlaceholderAsset = (asset: GameAsset): boolean => {
   })
   
   if (!imageUrl) {
-    console.log('❌ No image URL found - marking as placeholder')
+    console.log('❌ No image URL found - marking as placeholder for:', asset.name)
     return true
   }
   
   // Check if it's a placeholder URL
   if (typeof imageUrl === 'string') {
     const isPlaceholder = imageUrl.includes('placeholder') || imageUrl.includes('example.com')
-    console.log('🔍 URL check:', {
+    console.log('🔍 URL check for', asset.name, ':', {
       url: imageUrl,
       includesPlaceholder: imageUrl.includes('placeholder'),
       includesExample: imageUrl.includes('example.com'),
@@ -195,7 +196,7 @@ const isPlaceholderAsset = (asset: GameAsset): boolean => {
     return isPlaceholder
   }
   
-  console.log('❌ Image URL is not a string - marking as placeholder')
+  console.log('❌ Image URL is not a string - marking as placeholder for:', asset.name)
   return false
 }
 
@@ -594,6 +595,15 @@ export const AssetGallery: React.FC<AssetGalleryProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(defaultView)
   const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState('all')
+  const [showAIGenerator, setShowAIGenerator] = useState(true)
+  const [generatedAssets, setGeneratedAssets] = useState<GeneratedAsset[]>([])
+
+  // Handle AI asset generation
+  const handleAssetGenerated = useCallback((asset: GeneratedAsset) => {
+    setGeneratedAssets(prev => [...prev, asset])
+    // Convert GeneratedAsset to GameAsset format for display
+    // This would typically be handled by your asset management system
+  }, [])
 
   // Debug logging
   console.log('🎨 AssetGallery Debug:', { 
@@ -707,6 +717,39 @@ export const AssetGallery: React.FC<AssetGalleryProps> = ({
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* AI Asset Generator */}
+      <AnimatePresence>
+        {showAIGenerator && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <AIAssetGenerator
+              onAssetGenerated={handleAssetGenerated}
+              onClose={() => setShowAIGenerator(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toggle AI Generator Button (when collapsed) */}
+      {!showAIGenerator && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex justify-center"
+        >
+          <button
+            onClick={() => setShowAIGenerator(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 rounded-lg text-white font-medium transition-colors"
+          >
+            <Sparkle className="w-4 h-4" />
+            Show AI Asset Generator
+          </button>
+        </motion.div>
+      )}
+
       {/* Header with search and controls */}
       {(showSearch || showFilters) && (
         <motion.div 

@@ -1,34 +1,48 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProject } from './lib/types'
-import { getMockProjects } from './lib/mockData'
+import { getMockProjects, migrateOldStoryContent } from './lib/mockData'
 import { GameStudioSidebar } from './components/GameStudioSidebar'
 import { GameForgeDashboard } from './components/GameForgeDashboard'
 import { Dashboard } from './components/Dashboard'
 import { ProjectDetailView } from './components/ProjectDetailView'
 import { QAWorkspace } from './components/QAWorkspace'
 import { StoryLoreWorkspace } from './components/StoryLoreWorkspace'
+import { StoryDisplay } from './components/StoryDisplay'
 import { AssetStudioWorkspace } from './components/AssetStudioWorkspace'
+import { AssetEditingStudio } from './components/AssetEditingStudio'
 import { PreviewWorkspace } from './components/PreviewWorkspace'
 import { GameplayStudio } from './components/GameplayStudio'
+import { CodeGenerationWorkspace } from './components/CodeGenerationWorkspace'
+import { ProjectCreationMockup } from './components/ProjectCreationMockup'
 import { Toaster } from './components/ui/sonner'
 import { useLocalStorage } from './hooks/use-local-storage'
 import { useIsMobile } from './hooks/use-mobile'
 import { toast } from 'sonner'
 
 function App() {
+  console.log('App component rendering...');
+  
   const [currentSection, setCurrentSection] = useState('dashboard')
   const [selectedProject, setSelectedProject] = useState<GameProject | null>(null)
+  const [editingAsset, setEditingAsset] = useState<any | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [projects, setProjects] = useLocalStorage<GameProject[]>('game_projects', [])
   const [qaProject, setQaProject] = useState<GameProject | null>(null)
   const isMobile = useIsMobile()
 
+  console.log('App state - currentSection:', currentSection);
+  console.log('App state - projects:', projects.length);
+
   // One-time cleanup of duplicate projects and initialization
   useEffect(() => {
-    // DEBUGGING: Check what's in localStorage
-    console.log('🔍 LOCALSTORAGE DEBUG:')
+    // TEMPORARY: Force clear localStorage to regenerate with new story format
+    console.log('🧹 Forcing localStorage clear for new story format')
+    localStorage.removeItem('game_projects')
+    
+    // Check for old story format and migrate if needed
     const rawStorageData = localStorage.getItem('game_projects')
+    console.log('🔍 LOCALSTORAGE DEBUG:')
     console.log('📦 Raw localStorage data:', rawStorageData)
     
     if (rawStorageData) {
@@ -36,6 +50,22 @@ function App() {
         const parsedData = JSON.parse(rawStorageData)
         console.log('📊 Parsed projects from localStorage:', parsedData)
         console.log('📈 Number of projects in storage:', parsedData.length)
+        
+        // Check if any project has old story format
+        const hasOldStoryFormat = parsedData.some((project: any) => 
+          project.story && project.story.genre && !project.story.metadata
+        )
+        
+        if (hasOldStoryFormat) {
+          console.log('🔄 Detected old story format - clearing localStorage and regenerating')
+          localStorage.removeItem('game_projects')
+          // Force regeneration of projects
+          if (projects.length === 0) {
+            const mockProjects = getMockProjects()
+            setProjects(mockProjects)
+            console.log('✨ Generated fresh projects with new story format')
+          }
+        }
         
         if (parsedData.length > 0) {
           console.log('🎯 First project in storage:', parsedData[0])
@@ -134,7 +164,7 @@ function App() {
               ui: []
             }
           }))
-      setProjects(updatedProjects)
+      // setProjects(updatedProjects) // COMMENTED OUT: This was overriding theme-appropriate assets
       return
     }
     
@@ -189,6 +219,48 @@ function App() {
     setCurrentSection(section)
   }
 
+  const handleEditAsset = (asset: any) => {
+    console.log('🎨 Opening asset editor for:', asset.name)
+    setEditingAsset(asset)
+    setCurrentSection('asset-editor')
+    toast.success(`🎨 Opening Asset Editor for "${asset.name}"`)
+  }
+
+  const handleCloseAssetEditor = () => {
+    setEditingAsset(null)
+    setCurrentSection('assets')
+  }
+
+  const handleSaveAsset = (updatedAsset: any) => {
+    console.log('💾 Saving asset updates:', updatedAsset.name)
+    // TODO: Update the asset in the project's assets array
+    if (selectedProject && editingAsset && selectedProject.assets) {
+      const updatedProject = { ...selectedProject }
+      // Find and update the asset in the appropriate category
+      if (updatedProject.assets) {
+        Object.keys(updatedProject.assets).forEach(category => {
+          if (updatedProject.assets?.[category]) {
+            const assetIndex = updatedProject.assets[category].findIndex(
+              (asset: any) => asset.id === editingAsset.id
+            )
+            if (assetIndex !== -1) {
+              updatedProject.assets[category][assetIndex] = updatedAsset
+            }
+          }
+        })
+      }
+      
+      // Update the projects array
+      setProjects(currentProjects => 
+        currentProjects.map(p => p.id === updatedProject.id ? updatedProject : p)
+      )
+      setSelectedProject(updatedProject)
+    }
+    
+    toast.success(`💾 Asset "${updatedAsset.name}" saved successfully!`)
+    handleCloseAssetEditor()
+  }
+
   const renderMainContent = () => {
     console.log('🎯 APP: Rendering Main Content:', {
       currentSection: currentSection,
@@ -222,19 +294,86 @@ function App() {
       case 'projects':
         return <Dashboard onProjectSelect={handleProjectSelect} onQAWorkspace={handleQAWorkspace} projects={projects} onProjectsChange={setProjects} />
       case 'story':
-        return (
+        console.log('🎭 Story section - checking project story:', {
+          hasProject: !!selectedProject,
+          hasStory: !!selectedProject?.story,
+          storyStructure: selectedProject?.story ? Object.keys(selectedProject.story) : 'none'
+        })
+        
+        if (selectedProject?.story) {
+          // Attempt to migrate old story format to new format
+          const migratedStory = migrateOldStoryContent(selectedProject.story)
+          
+          if (migratedStory) {
+            // If migration was needed, update the project
+            if (migratedStory !== selectedProject.story) {
+              const updatedProject = { ...selectedProject, story: migratedStory }
+              setProjects(currentProjects => 
+                currentProjects.map(p => p.id === updatedProject.id ? updatedProject : p)
+              )
+              setSelectedProject(updatedProject)
+            }
+            
+            return (
+              <StoryDisplay 
+                story={migratedStory}
+                className="p-6"
+              />
+            )
+          }
+        }
+        
+        // Fallback when no project is selected or no story data
+        return selectedProject ? (
           <StoryLoreWorkspace 
-            projectId={selectedProject?.id}
+            projectId={selectedProject.id}
             onContentChange={(content) => {
               // Handle story content updates if needed
               console.log('Story content updated:', content)
             }}
           />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-1 p-6 flex items-center justify-center"
+          >
+            <div className="text-center space-y-4 max-w-md">
+              <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                  className="text-accent"
+                >
+                  📖
+                </motion.div>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Story & Lore Studio
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Select a project to explore its story, characters, world lore, and narrative elements.
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="px-6 py-3 bg-accent text-accent-foreground rounded-lg font-medium shadow-lg"
+                  onClick={() => setCurrentSection('dashboard')}
+                >
+                  Browse Projects
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
         )
       case 'assets':
+        console.log('🏗️ Rendering AssetStudioWorkspace with project:', selectedProject)
         return selectedProject ? (
           <AssetStudioWorkspace 
             projectId={selectedProject.id}
+            project={selectedProject}
+            onEditAsset={handleEditAsset}
           />
         ) : (
           <motion.div
@@ -304,6 +443,50 @@ function App() {
                   className="bg-accent hover:bg-accent/90 text-accent-foreground px-6 py-3 rounded-lg font-medium transition-colors"
                 >
                   Create New Project
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )
+      case 'code':
+        return selectedProject ? (
+          <CodeGenerationWorkspace 
+            projectId={selectedProject.id}
+            onContentChange={(content) => {
+              // Handle code content updates if needed
+              console.log('Code content updated:', content)
+            }}
+          />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-1 p-6 flex items-center justify-center"
+          >
+            <div className="text-center space-y-4 max-w-md">
+              <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                  className="text-accent"
+                >
+                  💻
+                </motion.div>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Code Generation Studio
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Select a project to access the AI-powered code generation workspace and create game logic, scripts, and mechanics.
+                </p>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setCurrentSection('dashboard')}
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  Browse Projects
                 </motion.button>
               </div>
             </div>
@@ -393,7 +576,7 @@ function App() {
                         </div>
                       </div>
                       <p className="text-muted-foreground text-sm line-clamp-2">
-                        {project.story?.plotOutline || 'Enter QA mode to test gameplay mechanics and balance.'}
+                        {project.story?.mainStoryArc?.description || 'Enter QA mode to test gameplay mechanics and balance.'}
                       </p>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">
@@ -448,6 +631,31 @@ function App() {
             </div>
           </motion.div>
         )
+      case 'asset-editor':
+        return editingAsset && selectedProject ? (
+          <AssetEditingStudio
+            asset={editingAsset}
+            onClose={handleCloseAssetEditor}
+            onSave={handleSaveAsset}
+          />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex-1 p-6 flex items-center justify-center"
+          >
+            <div className="text-center space-y-4 max-w-md">
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                Asset Editor
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                No asset selected for editing.
+              </p>
+            </div>
+          </motion.div>
+        )
+      case 'creation-test':
+        return <ProjectCreationMockup />
       default:
         return <Dashboard onProjectSelect={handleProjectSelect} onQAWorkspace={handleQAWorkspace} projects={projects} onProjectsChange={setProjects} />
     }

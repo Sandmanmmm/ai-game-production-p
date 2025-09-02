@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { StoryContent, Character } from '@/lib/types'
+import { StoryLoreContent, StoryCharacter } from '@/lib/types'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,12 +16,24 @@ import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { cn } from '@/lib/utils'
 
 interface StoryDisplayProps {
-  story: StoryContent
+  story: StoryLoreContent
   className?: string
 }
 
 export function StoryDisplay({ story, className }: StoryDisplayProps) {
-  const getRoleIcon = (role: Character['role']) => {
+  // Safety check for story structure
+  if (!story || !story.metadata || !story.mainStoryArc || !story.worldLore) {
+    return (
+      <div className={cn("space-y-6", className)}>
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold text-foreground">Story & Lore</h2>
+          <p className="text-muted-foreground">Story data is incomplete or in old format. Please refresh or recreate the project.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const getRoleIcon = (role: StoryCharacter['role']) => {
     switch (role) {
       case 'protagonist': return <Crown size={16} className="text-amber-400" />
       case 'antagonist': return <Sword size={16} className="text-red-400" />
@@ -30,7 +42,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
     }
   }
 
-  const getRoleColor = (role: Character['role']) => {
+  const getRoleColor = (role: StoryCharacter['role']) => {
     switch (role) {
       case 'protagonist': return 'border-amber-500/30 bg-amber-500/10'
       case 'antagonist': return 'border-red-500/30 bg-red-500/10'
@@ -73,7 +85,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
                 <span className="font-medium text-foreground">Genre</span>
               </div>
               <Badge variant="secondary" className="text-base px-4 py-2">
-                {story.genre}
+                {story.metadata.genre}
               </Badge>
             </div>
             
@@ -82,7 +94,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
                 <Users size={16} className="text-accent" />
                 <span className="font-medium text-foreground">Target Audience</span>
               </div>
-              <p className="text-muted-foreground">{story.targetAudience}</p>
+              <p className="text-muted-foreground">{story.metadata.targetAudience}</p>
             </div>
           </div>
 
@@ -93,7 +105,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
               <span className="font-medium text-foreground">Setting</span>
             </div>
             <Card className="p-4 bg-muted/20 border-border/50">
-              <p className="text-foreground leading-relaxed">{story.setting}</p>
+              <p className="text-foreground leading-relaxed">{story.worldLore.geography}</p>
             </Card>
           </div>
 
@@ -104,7 +116,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
               <span className="font-medium text-foreground">Plot Outline</span>
             </div>
             <Card className="p-4 bg-muted/20 border-border/50">
-              <p className="text-foreground leading-relaxed">{story.plotOutline}</p>
+              <p className="text-foreground leading-relaxed">{story.mainStoryArc.description}</p>
             </Card>
           </div>
 
@@ -115,7 +127,7 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
               <span className="font-medium text-foreground">Core Themes</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {story.themes.map((theme, index) => (
+              {story.mainStoryArc.themes.map((theme, index) => (
                 <motion.div
                   key={theme}
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -205,17 +217,17 @@ export function StoryDisplay({ story, className }: StoryDisplayProps) {
                         </div>
                       )}
 
-                      {/* Attributes */}
-                      {character.attributes && (
+                      {/* Character Traits */}
+                      {character.traits && (
                         <div className="space-y-2">
                           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            Attributes
+                            Character Traits
                           </p>
                           <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(character.attributes).map(([attr, value]) => (
-                              <div key={attr} className="space-y-1">
+                            {Object.entries(character.traits).map(([trait, value]) => (
+                              <div key={trait} className="space-y-1">
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="capitalize text-muted-foreground">{attr}</span>
+                                  <span className="capitalize text-muted-foreground">{trait}</span>
                                   <span className={cn("font-bold", getAttributeColor(value as number))}>
                                     {value}/10
                                   </span>

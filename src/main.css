@@ -185,3 +185,62 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Animated Background Styles for Login Page */
+@keyframes move-twinkle-back {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -10000px 5000px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stars,
+.twinkling {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.stars {
+  background: #000 url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ic3RhciI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjEiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0id2hpdGUiIHN0b3Atb3BhY2l0eT0iMCIgLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxnPgogICAgPGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMSIgZmlsbD0idXJsKCNzdGFyKSIgb3BhY2l0eT0iMC44IiAvPgogICAgPGNpcmNsZSBjeD0iNTAiIGN5PSI0MCIgcj0iMS41IiBmaWxsPSJ1cmwoI3N0YXIpIiBvcGFjaXR5PSIwLjYiIC8+CiAgICA8Y2lyY2xlIGN4PSI5MCIgY3k9IjIwIiByPSIxIiBmaWxsPSJ1cmwoI3N0YXIpIiBvcGFjaXR5PSIwLjciIC8+CiAgICA8Y2lyY2xlIGN4PSIxMzAiIGN5PSI4MCIgcj0iMC44IiBmaWxsPSJ1cmwoI3N0YXIpIiBvcGFjaXR5PSIwLjkiIC8+CiAgICA8Y2lyY2xlIGN4PSIxNzAiIGN5PSI2MCIgcj0iMS4yIiBmaWxsPSJ1cmwoI3N0YXIpIiBvcGFjaXR5PSIwLjUiIC8+CiAgICA8Y2lyY2xlIGN4PSIzMCIgY3k9IjEyMCIgcj0iMS4xIiBmaWxsPSJ1cmwoI3N0YXIpIiBvcGFjaXR5PSIwLjgiIC8+CiAgICA8Y2lyY2xlIGN4PSI4MCIgY3k9IjE0MCIgcj0iMC45IiBmaWxsPSJ1cmwoI3N0YXIpIiBvcGFjaXR5PSIwLjciIC8+CiAgICA8Y2lyY2xlIGN4PSIxNDAiIGN5PSIxNjAiIHI9IjEuMyIgZmlsbD0idXJsKCNzdGFyKSIgb3BhY2l0eT0iMC42IiAvPgogICAgPGNpcmNsZSBjeD0iMTkwIiBjeT0iMTMwIiByPSIwLjciIGZpbGw9InVybCgjc3RhcikiIG9wYWNpdHk9IjAuOSIgLz4KICA8L2c+Cjwvc3ZnPg==') repeat;
+  animation: move-twinkle-back 200s linear infinite;
+}
+
+.twinkling {
+  background: transparent url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0idHdpbmtsZSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjEiIC8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0id2hpdGUiIHN0b3Atb3BhY2l0eT0iMCIgLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxnPgogICAgPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMC41IiBmaWxsPSJ1cmwoI3R3aW5rbGUpIiBvcGFjaXR5PSIxIj4KICAgICAgPGFuaW1hdGUgYXR0cmlidXRlTmFtZT0ib3BhY2l0eSIgdmFsdWVzPSIwOzE7MDsxOzAiIGR1cj0iNHMiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIi8+CiAgICA8L2NpcmNsZT4KICAgIDxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjAuNyIgZmlsbD0idXJsKCN0d2lua2xlKSIgb3BhY2l0eT0iMSI+CiAgICAgIDxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9Im9wYWNpdHkiIHZhbHVlcz0iMTswOzE7MDs4IiBkdXI9IjNzIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSIvPgogICAgPC9jaXJjbGU+CiAgICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI0MCIgcj0iMC42IiBmaWxsPSJ1cmwoI3R3aW5rbGUpIiBvcGFjaXR5PSIxIj4KICAgICAgPGFuaW1hdGUgYXR0cmlidXRlTmFtZT0ib3BhY2l0eSIgdmFsdWVzPSIwOzA7MTswOzAiIGR1cj0iNXMiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIi8+CiAgICA8L2NpcmNsZT4KICAgIDxjaXJjbGUgY3g9IjE1MCIgY3k9IjEwMCIgcj0iMC44IiBmaWxsPSJ1cmwoI3R3aW5rbGUpIiBvcGFjaXR5PSIxIj4KICAgICAgPGFuaW1hdGUgYXR0cmlidXRlTmFtZT0ib3BhY2l0eSIgdmFsdWVzPSIxOzA7MDsxOzAiIGR1cj0iMi41cyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiLz4KICAgIDwvY2lyY2xlPgogICAgPGNpcmNsZSBjeD0iNDAiIGN5PSIxNDAiIHI9IjAuNCIgZmlsbD0idXJsKCN0d2lua2xlKSIgb3BhY2l0eT0iMSI+CiAgICAgIDxhbmltYXRlIGF0dHJpYnV0ZU5hbWU9Im9wYWNpdHkiIHZhbHVlcz0iMDsxOzE7MDswIiBkdXI9IjMuNXMiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIi8+CiAgICA8L2NpcmNsZT4KICAgIDxjaXJjbGUgY3g9IjE4MCIgY3k9IjE2MCIgcj0iMC45IiBmaWxsPSJ1cmwoI3R3aW5rbGUpIiBvcGFjaXR5PSIxIj4KICAgICAgPGFuaW1hdGUgYXR0cmlidXRlTmFtZT0ib3BhY2l0eSIgdmFsdWVzPSIwOzA7MTsxOzAiIGR1cj0iNC41cyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiLz4KICAgIDwvY2lyY2xlPgogIDwvZz4KPC9zdmc+') repeat;
+  animation: move-twinkle-back 100s linear infinite;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.8s ease-out forwards;
+}

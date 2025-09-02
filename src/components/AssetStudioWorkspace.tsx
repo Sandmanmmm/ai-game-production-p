@@ -36,15 +36,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
-import { ArtAsset, AudioAsset, ModelAsset, UIAsset, AssetGenerationParams } from '@/lib/types'
+import { ArtAsset, AudioAsset, ModelAsset, UIAsset, AssetGenerationParams, GameProject } from '@/lib/types'
 import { generateAssets } from '@/lib/aiMockGenerator'
+import { AIAssetGenerator } from './AIAssetGenerator'
+import { GeneratedAsset } from '../lib/assetStorage'
 
 interface AssetStudioWorkspaceProps {
   projectId?: string
+  project?: GameProject
+  onEditAsset?: (asset: any) => void
   className?: string
 }
 
-export function AssetStudioWorkspace({ projectId, className }: AssetStudioWorkspaceProps) {
+export function AssetStudioWorkspace({ projectId, project, onEditAsset, className }: AssetStudioWorkspaceProps) {
   const [activeCategory, setActiveCategory] = useState<'art' | 'audio' | 'models' | 'ui'>('art')
   const [activeSubcategory, setActiveSubcategory] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -60,85 +64,46 @@ export function AssetStudioWorkspace({ projectId, className }: AssetStudioWorksp
     format: 'png'
   })
 
-  // Mock asset data - in real app this would come from API/database
+  // Get assets from the project if available, otherwise use empty arrays
   const [assets, setAssets] = useState({
-    art: [
-      {
-        id: 'art-1',
-        name: 'Cyberpunk Rebel',
-        type: 'character',
-        category: 'character',
-        status: 'approved',
-        src: '/api/placeholder/512/512',
-        thumbnail: '/api/placeholder/256/256',
-        prompt: 'Futuristic hacker girl in neon city',
-        style: 'Anime',
-        tags: ['cyberpunk', 'character', 'female', 'hacker'],
-        linkedTo: ['char-1'],
-        variations: ['/api/placeholder/512/512', '/api/placeholder/512/512'],
-        metadata: {
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          usageCount: 5,
-          collections: ['main-characters'],
-          quality: 'excellent' as const,
-          aiGenerated: true
-        }
-      },
-      {
-        id: 'art-2', 
-        name: 'Neon Street',
-        type: 'environment',
-        category: 'environment',
-        status: 'approved',
-        src: '/api/placeholder/1024/512',
-        thumbnail: '/api/placeholder/256/128',
-        prompt: 'Dark alley with neon signs and holographic ads',
-        style: 'Cyberpunk',
-        tags: ['environment', 'cyberpunk', 'street', 'neon'],
-        linkedTo: ['location-1'],
-        variations: [],
-        metadata: {
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          usageCount: 3,
-          collections: ['environments'],
-          quality: 'good' as const,
-          aiGenerated: true
-        }
-      }
-    ],
-    audio: [
-      {
-        id: 'audio-1',
-        name: 'Rebel Theme',
-        type: 'music',
-        category: 'music',
-        status: 'approved',
-        src: '/api/placeholder-audio/rebel-theme.mp3',
-        duration: 180,
-        prompt: 'Dark synthwave theme with rising tension',
-        style: 'Synthwave',
-        bpm: 120,
-        key: 'Am',
-        tags: ['synthwave', 'battle', 'tense', 'character-theme'],
-        linkedTo: ['char-1'],
-        metadata: {
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          usageCount: 8,
-          collections: ['character-themes'],
-          quality: 'excellent' as const,
-          aiGenerated: true
-        }
-      }
-    ],
-    models: [],
-    ui: []
+    art: project?.assets?.art || [],
+    audio: project?.assets?.audio || [],
+    models: project?.assets?.models || [],
+    ui: project?.assets?.ui || []
   })
+
+  // Update assets when project changes
+  useEffect(() => {
+    if (project?.assets) {
+      console.log('🎨 AssetStudioWorkspace: Loading project assets:', {
+        projectTitle: project.title,
+        artCount: project.assets.art?.length || 0,
+        audioCount: project.assets.audio?.length || 0,
+        modelsCount: project.assets.models?.length || 0,
+        uiCount: project.assets.ui?.length || 0
+      })
+      
+      setAssets({
+        art: project.assets.art || [],
+        audio: project.assets.audio || [],
+        models: project.assets.models || [],
+        ui: project.assets.ui || []
+      })
+    }
+  }, [project])
 
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [showAIGenerator, setShowAIGenerator] = useState(true)
+
+  // Helper function to get thumbnail for different asset types
+  const getAssetThumbnail = (asset: any) => {
+    if ('thumbnail' in asset) {
+      return asset.thumbnail
+    }
+    // Fallback for different asset types
+    return '/api/placeholder/64/64'
+  }
 
   const categories = {
     art: {
@@ -215,6 +180,42 @@ export function AssetStudioWorkspace({ projectId, className }: AssetStudioWorksp
         setPlayingAudio(assetId)
       }
     }
+  }
+
+  // Handle AI asset generation
+  const handleAssetGenerated = (generatedAsset: GeneratedAsset) => {
+    // Convert GeneratedAsset to the format expected by AssetStudioWorkspace
+    const newAsset = {
+      id: generatedAsset.id,
+      name: generatedAsset.filename.replace(/\.[^/.]+$/, ''), // Remove extension
+      src: generatedAsset.url,
+      thumbnail: generatedAsset.url,
+      category: generatedAsset.metadata.category,
+      type: generatedAsset.type,
+      tags: generatedAsset.metadata.tags || [],
+      prompt: generatedAsset.metadata.prompt,
+      metadata: {
+        ...generatedAsset.metadata,
+        aiGenerated: true,
+        createdAt: generatedAsset.createdAt
+      }
+    }
+
+    // Add to the appropriate category
+    const category = generatedAsset.type.includes('art') || 
+                    generatedAsset.type.includes('character') || 
+                    generatedAsset.type.includes('environment') ||
+                    generatedAsset.type.includes('prop') ||
+                    generatedAsset.type.includes('texture') ||
+                    generatedAsset.type.includes('sprite') ||
+                    generatedAsset.type.includes('background') ? 'art' : 
+                    generatedAsset.type.includes('ui') || 
+                    generatedAsset.type.includes('icon') ? 'ui' : 'art' // default to art
+    
+    setAssets(prev => ({
+      ...prev,
+      [category]: [...prev[category], newAsset]
+    }))
   }
 
   const getFilteredAssets = () => {
@@ -349,7 +350,12 @@ export function AssetStudioWorkspace({ projectId, className }: AssetStudioWorksp
                       <Eye className="w-4 h-4" />
                     </Button>
                   )}
-                  <Button size="sm" variant="secondary">
+                  <Button size="sm" variant="secondary" onClick={(e) => {
+                    e.stopPropagation()
+                    if (onEditAsset) {
+                      onEditAsset(asset)
+                    }
+                  }}>
                     <PencilSimple className="w-4 h-4" />
                   </Button>
                   <Button size="sm" variant="secondary">
@@ -435,8 +441,42 @@ export function AssetStudioWorkspace({ projectId, className }: AssetStudioWorksp
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
+      <CardContent className="flex-1 overflow-hidden flex flex-col">
+        {/* AI Asset Generator */}
+        <AnimatePresence>
+          {showAIGenerator && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6"
+            >
+              <AIAssetGenerator
+                onAssetGenerated={handleAssetGenerated}
+                onClose={() => setShowAIGenerator(false)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Toggle AI Generator Button (when collapsed) */}
+        {!showAIGenerator && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-center mb-6"
+          >
+            <Button
+              onClick={() => setShowAIGenerator(true)}
+              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+            >
+              <Sparkle className="w-4 h-4 mr-2" />
+              Show AI Asset Generator
+            </Button>
+          </motion.div>
+        )}
+
+        <ScrollArea className="flex-1">
           <AnimatePresence>
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -452,7 +492,7 @@ export function AssetStudioWorkspace({ projectId, className }: AssetStudioWorksp
                           <MusicNote className="w-6 h-6 text-accent" />
                         ) : (
                           <img
-                            src={asset.thumbnail || '/api/placeholder/64/64'}
+                            src={getAssetThumbnail(asset)}
                             alt={asset.name}
                             className="w-full h-full object-cover"
                           />
@@ -473,7 +513,12 @@ export function AssetStudioWorkspace({ projectId, className }: AssetStudioWorksp
                         <Button size="sm" variant="outline">
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={(e) => {
+                          e.stopPropagation()
+                          if (onEditAsset) {
+                            onEditAsset(asset)
+                          }
+                        }}>
                           <PencilSimple className="w-4 h-4" />
                         </Button>
                       </div>
