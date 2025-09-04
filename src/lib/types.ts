@@ -9,7 +9,7 @@ export interface GameProject {
   updatedAt: string
   thumbnail?: string
   pipeline: PipelineStage[]
-  story?: StoryContent
+  story?: StoryLoreContent
   assets?: AssetCollection
   gameplay?: GameplayContent
   qa?: QAContent
@@ -25,15 +25,6 @@ export interface PipelineStage {
   dependencies?: string[]
   estimatedHours?: number
   actualHours?: number
-}
-
-export interface StoryContent {
-  genre: string
-  setting: string
-  characters: Character[]
-  plotOutline: string
-  themes: string[]
-  targetAudience: string
 }
 
 export interface Character {
@@ -425,4 +416,15 @@ export interface StoryMetadata {
   estimatedLength: 'short' | 'medium' | 'long' | 'epic'
   themes: string[]
   contentWarnings?: string[]
+}
+
+export interface GameAsset {
+  id: string
+  name: string
+  type: 'image' | 'audio' | 'model' | 'text' | 'code'
+  url: string
+  description: string
+  metadata: Record<string, any>
+  tags: string[]
+  createdAt: string
 }

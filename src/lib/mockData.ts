@@ -1,8 +1,456 @@
-import { GameProject, PipelineStage, AIAssistantMessage } from './types'
+import { GameProject, PipelineStage, AIAssistantMessage, ArtAsset, AudioAsset, ModelAsset, StoryLoreContent } from './types'
+
+const createBasicStoryLoreContent = (genre: string, setting: string, plotOutline: string, themes: string[]): StoryLoreContent => {
+  return {
+    worldLore: {
+      id: 'world-1',
+      name: `${genre} World`,
+      geography: `A rich ${genre.toLowerCase()} world with diverse landscapes and environments.`,
+      politics: 'Complex political structures shape the world dynamics.',
+      culture: `The culture reflects traditional ${genre.toLowerCase()} themes and values.`,
+      history: 'A deep history spans generations, creating the backdrop for current events.',
+      technology: genre.includes('sci-fi') || genre.includes('cyberpunk') ? 'Advanced technology plays a key role' : 'Traditional tools and methods are used',
+      magic: genre.includes('fantasy') || genre.includes('magic') ? 'Magic is woven into the fabric of reality' : 'No magical elements present'
+    },
+    mainStoryArc: {
+      id: 'main-arc-1',
+      title: 'The Main Journey',
+      description: plotOutline,
+      acts: [
+        { id: 'act-1', name: 'Beginning', description: 'The story begins and characters are introduced', chapters: ['chapter-1', 'chapter-2'] },
+        { id: 'act-2', name: 'Rising Action', description: 'Conflict develops and tension builds', chapters: ['chapter-3', 'chapter-4'] },
+        { id: 'act-3', name: 'Climax & Resolution', description: 'The climax occurs and story concludes', chapters: ['chapter-5'] }
+      ],
+      themes: themes,
+      tone: 'balanced' as const
+    },
+    chapters: [
+      { id: 'chapter-1', title: 'The Beginning', description: 'Our story starts here', content: 'Chapter content...', order: 1, status: 'draft' as const, characters: [], locations: [], objectives: [] },
+      { id: 'chapter-2', title: 'First Challenge', description: 'The first obstacle appears', content: 'Chapter content...', order: 2, status: 'draft' as const, characters: [], locations: [], objectives: [] },
+      { id: 'chapter-3', title: 'Rising Tension', description: 'Things get more complex', content: 'Chapter content...', order: 3, status: 'draft' as const, characters: [], locations: [], objectives: [] },
+      { id: 'chapter-4', title: 'The Confrontation', description: 'Major conflict emerges', content: 'Chapter content...', order: 4, status: 'draft' as const, characters: [], locations: [], objectives: [] },
+      { id: 'chapter-5', title: 'Resolution', description: 'The story concludes', content: 'Chapter content...', order: 5, status: 'draft' as const, characters: [], locations: [], objectives: [] }
+    ],
+    characters: [],
+    factions: [],
+    subplots: [],
+    timeline: [],
+    metadata: {
+      genre: genre,
+      targetAudience: 'Teen and Adult gamers',
+      complexity: 'medium' as const,
+      estimatedLength: 'medium' as const,
+      themes: themes
+    }
+  }
+}
+
+// Migration function to convert old StoryContent to new StoryLoreContent
+const migrateOldStoryContent = (oldStory: any): StoryLoreContent | null => {
+  if (!oldStory) return null
+  
+  // Check if it's already the new format
+  if (oldStory.worldLore && oldStory.mainStoryArc && oldStory.metadata) {
+    return oldStory as StoryLoreContent
+  }
+  
+  // Convert old format to new format
+  if (oldStory.genre && oldStory.setting && oldStory.plotOutline && oldStory.themes) {
+    console.log('🔄 Migrating old story format to new format')
+    return createBasicStoryLoreContent(
+      oldStory.genre,
+      oldStory.setting,
+      oldStory.plotOutline,
+      oldStory.themes
+    )
+  }
+  
+  return null
+}
+
+export { migrateOldStoryContent }
+
+const generateThemeApropriateAssets = (prompt: string, genre: string) => {
+  const promptLower = prompt.toLowerCase()
+  
+  if (promptLower.includes('cyberpunk') || promptLower.includes('hacking') || promptLower.includes('futuristic')) {
+    return {
+      art: [
+        {
+          id: 'art_cyberpunk_rebel',
+          name: 'Cyberpunk Rebel',
+          type: 'character' as const,
+          category: 'character' as const,
+          status: 'approved' as const,
+          tags: ['cyberpunk', 'character', 'hacker', 'rebel'],
+          src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+          prompt: 'Futuristic hacker girl in neon city',
+          style: 'Cyberpunk',
+          resolution: '1024x1024',
+          format: 'PNG',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 5,
+            collections: ['main-characters'],
+            quality: 'excellent' as const,
+            aiGenerated: true
+          }
+        },
+        {
+          id: 'art_neon_street',
+          name: 'Neon Street',
+          type: 'environment' as const,
+          category: 'environment' as const,
+          status: 'approved' as const,
+          tags: ['environment', 'cyberpunk', 'street', 'neon'],
+          src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop',
+          prompt: 'Dark alley with neon signs and holographic ads',
+          style: 'Cyberpunk',
+          resolution: '1920x1080',
+          format: 'PNG',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 3,
+            collections: ['environments'],
+            quality: 'good',
+            aiGenerated: true
+          }
+        }
+      ],
+      audio: [
+        {
+          id: 'audio_cyber_theme',
+          name: 'Synthwave Combat Theme',
+          type: 'music',
+          category: 'music',
+          status: 'approved',
+          tags: ['synthwave', 'cyberpunk', 'battle', 'electronic'],
+          src: '/audio/synthwave-theme.mp3',
+          duration: 180,
+          prompt: 'Dark synthwave music with cyberpunk vibes',
+          style: 'Synthwave',
+          bpm: 140,
+          key: 'D minor',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 7,
+            collections: ['music-tracks'],
+            quality: 'excellent',
+            aiGenerated: true
+          }
+        }
+      ],
+      models: [
+        {
+          id: 'model_cyber_drone',
+          name: 'Security Drone',
+          type: '3d',
+          category: 'prop',
+          status: 'review',
+          tags: ['drone', 'cyberpunk', 'security', 'tech'],
+          src: '/models/security-drone.fbx',
+          thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop',
+          polyCount: 3200,
+          prompt: 'Futuristic security drone with scanning abilities',
+          style: 'Cyberpunk',
+          format: 'FBX',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 2,
+            collections: ['tech-props'],
+            quality: 'good',
+            aiGenerated: true
+          }
+        }
+      ]
+    }
+  }
+  
+  if (promptLower.includes('fantasy') || promptLower.includes('dragon') || promptLower.includes('magic') || promptLower.includes('rpg')) {
+    return {
+      art: [
+        {
+          id: 'art_dragon_companion',
+          name: 'Dragon Companion',
+          type: 'character',
+          category: 'character',
+          status: 'approved',
+          tags: ['dragon', 'fantasy', 'companion', 'magical'],
+          src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+          prompt: 'Majestic dragon companion with iridescent scales',
+          style: 'Fantasy',
+          resolution: '1024x1024',
+          format: 'PNG',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 8,
+            collections: ['main-characters'],
+            quality: 'excellent',
+            aiGenerated: true
+          }
+        },
+        {
+          id: 'art_magic_forest',
+          name: 'Enchanted Forest',
+          type: 'environment',
+          category: 'environment',
+          status: 'approved',
+          tags: ['forest', 'magic', 'enchanted', 'fantasy'],
+          src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop',
+          prompt: 'Mystical forest with glowing magical elements and ancient trees',
+          style: 'Fantasy',
+          resolution: '1920x1080',
+          format: 'PNG',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 6,
+            collections: ['environments'],
+            quality: 'excellent',
+            aiGenerated: true
+          }
+        },
+        {
+          id: 'art_crafting_table',
+          name: 'Magic Crafting Station',
+          type: 'prop',
+          category: 'prop',
+          status: 'review',
+          tags: ['crafting', 'magic', 'station', 'fantasy'],
+          src: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop',
+          prompt: 'Ornate magical crafting table with floating runes and materials',
+          style: 'Fantasy',
+          resolution: '1024x1024',
+          format: 'PNG',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 4,
+            collections: ['props'],
+            quality: 'good',
+            aiGenerated: true
+          }
+        }
+      ],
+      audio: [
+        {
+          id: 'audio_fantasy_theme',
+          name: 'Epic Fantasy Theme',
+          type: 'music',
+          category: 'music',
+          status: 'approved',
+          tags: ['orchestral', 'fantasy', 'epic', 'adventure'],
+          src: '/audio/fantasy-theme.mp3',
+          duration: 210,
+          prompt: 'Sweeping orchestral theme with magical undertones',
+          style: 'Orchestral',
+          bpm: 80,
+          key: 'C major',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 9,
+            collections: ['music-tracks'],
+            quality: 'excellent',
+            aiGenerated: true
+          }
+        },
+        {
+          id: 'audio_dragon_roar',
+          name: 'Dragon Roar Sound',
+          type: 'sfx',
+          category: 'sound-fx',
+          status: 'approved',
+          tags: ['dragon', 'roar', 'creature', 'fantasy'],
+          src: '/audio/dragon-roar.wav',
+          duration: 3,
+          prompt: 'Powerful dragon roar with magical resonance',
+          style: 'Cinematic',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 5,
+            collections: ['sound-effects'],
+            quality: 'excellent',
+            aiGenerated: true
+          }
+        }
+      ],
+      models: [
+        {
+          id: 'model_magic_sword',
+          name: 'Dragonfire Blade',
+          type: '3d',
+          category: 'prop',
+          status: 'approved',
+          tags: ['sword', 'magic', 'dragon', 'weapon'],
+          src: '/models/dragonfire-blade.fbx',
+          thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+          polyCount: 2100,
+          prompt: 'Enchanted sword with dragon-forged blade and fire effects',
+          style: 'Fantasy',
+          format: 'FBX',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 7,
+            collections: ['weapons'],
+            quality: 'excellent',
+            aiGenerated: true
+          }
+        }
+      ]
+    }
+  }
+  
+  if (promptLower.includes('space') || promptLower.includes('exploration') || promptLower.includes('planet') || promptLower.includes('sci-fi')) {
+    return {
+      art: [
+        {
+          id: 'art_space_explorer',
+          name: 'Space Explorer',
+          type: 'character',
+          category: 'character',
+          status: 'approved',
+          tags: ['space', 'explorer', 'astronaut', 'sci-fi'],
+          src: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+          prompt: 'Futuristic space explorer in advanced suit',
+          style: 'Sci-Fi',
+          resolution: '1024x1024',
+          format: 'PNG',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 6,
+            collections: ['main-characters'],
+            quality: 'excellent',
+            aiGenerated: true
+          }
+        },
+        {
+          id: 'art_alien_planet',
+          name: 'Alien Planet Surface',
+          type: 'environment',
+          category: 'environment',
+          status: 'approved',
+          tags: ['planet', 'alien', 'exploration', 'landscape'],
+          src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop',
+          prompt: 'Mysterious alien planet with unique flora and terrain',
+          style: 'Sci-Fi',
+          resolution: '1920x1080',
+          format: 'PNG',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 4,
+            collections: ['environments'],
+            quality: 'good',
+            aiGenerated: true
+          }
+        }
+      ],
+      audio: [
+        {
+          id: 'audio_space_ambient',
+          name: 'Deep Space Ambience',
+          type: 'ambient',
+          category: 'ambient',
+          status: 'approved',
+          tags: ['space', 'ambient', 'exploration', 'atmospheric'],
+          src: '/audio/space-ambient.mp3',
+          duration: 300,
+          prompt: 'Atmospheric space sounds with distant cosmic phenomena',
+          style: 'Ambient',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 3,
+            collections: ['ambient-tracks'],
+            quality: 'good',
+            aiGenerated: true
+          }
+        }
+      ],
+      models: [
+        {
+          id: 'model_spaceship',
+          name: 'Exploration Vessel',
+          type: '3d',
+          category: 'prop',
+          status: 'review',
+          tags: ['spaceship', 'vessel', 'exploration', 'sci-fi'],
+          src: '/models/exploration-vessel.fbx',
+          thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop',
+          polyCount: 8500,
+          prompt: 'Advanced exploration spaceship with modular design',
+          style: 'Sci-Fi',
+          format: 'FBX',
+          variations: [],
+          linkedTo: [],
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            usageCount: 2,
+            collections: ['vehicles'],
+            quality: 'good',
+            aiGenerated: true
+          }
+        }
+      ]
+    }
+  }
+  
+  // Default generic assets for other themes
+  return {
+    art: [] as ArtAsset[],
+    audio: [] as AudioAsset[],
+    models: [] as ModelAsset[]
+  }
+}
 
 export const generateMockProject = (prompt: string): GameProject => {
   const id = `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   const title = generateGameTitle(prompt)
+  const genre = detectGenre(prompt)
+  const assets = generateThemeApropriateAssets(prompt, genre)
   
   return {
     id,
@@ -14,84 +462,16 @@ export const generateMockProject = (prompt: string): GameProject => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     pipeline: generatePipelineStages(),
-    story: {
-      genre: detectGenre(prompt),
-      setting: generateSetting(prompt),
-      characters: [],
-      plotOutline: generatePlotOutline(prompt),
-      themes: generateThemes(prompt),
-      targetAudience: 'Teen and Adult gamers'
-    },
+    story: createBasicStoryLoreContent(
+      genre,
+      generateSetting(prompt),
+      generatePlotOutline(prompt),
+      generateThemes(prompt)
+    ),
     assets: {
-      art: [
-        {
-          id: 'art_hero_concept',
-          name: 'Hero Character Concept',
-          type: 'character',
-          category: 'character',
-          status: 'approved',
-          tags: ['hero', 'character', 'concept'],
-          thumbnail: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop'
-        },
-        {
-          id: 'art_environment',
-          name: 'Forest Environment',
-          type: 'environment',
-          category: 'environment',
-          status: 'in-progress',
-          tags: ['forest', 'environment', 'background'],
-          thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop'
-        },
-        {
-          id: 'art_ui_mockup',
-          name: 'Game UI Mockup',
-          type: 'ui',
-          category: 'ui',
-          status: 'review',
-          tags: ['ui', 'interface', 'hud'],
-          thumbnail: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=300&fit=crop'
-        }
-      ],
-      audio: [
-        {
-          id: 'audio_theme',
-          name: 'Main Theme Music',
-          type: 'music',
-          category: 'music',
-          status: 'approved',
-          tags: ['theme', 'orchestral', 'epic'],
-          duration: 180
-        },
-        {
-          id: 'audio_combat',
-          name: 'Combat Sound Effects',
-          type: 'sfx',
-          category: 'sound-fx',
-          status: 'in-progress',
-          tags: ['combat', 'sfx', 'action'],
-          duration: 45
-        }
-      ],
-      models: [
-        {
-          id: 'model_hero',
-          name: 'Hero 3D Model',
-          type: '3d',
-          category: 'character',
-          status: 'review',
-          tags: ['hero', 'low-poly', 'rigged'],
-          polyCount: 5420
-        },
-        {
-          id: 'model_sword',
-          name: 'Magic Sword',
-          type: '3d',
-          category: 'prop',
-          status: 'approved',
-          tags: ['weapon', 'magic', 'prop'],
-          polyCount: 1200
-        }
-      ],
+      art: assets.art as ArtAsset[] || [],
+      audio: assets.audio as AudioAsset[] || [],
+      models: assets.models as ModelAsset[] || [],
       ui: []
     },
     gameplay: {

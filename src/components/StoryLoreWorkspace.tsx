@@ -30,12 +30,15 @@ import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
-import { StoryLoreContent, StoryChapter, StoryCharacter, StoryFaction, WorldLore } from '@/lib/types'
+import { StoryLoreContent, StoryChapter, StoryCharacter, StoryFaction, WorldLore, StoryContent } from '@/lib/types'
 import { generateStoryContent } from '@/lib/aiMockGenerator'
+import { generateStory, StoryGenerationRequest, STORY_GENRES, STORY_TONES } from '@/lib/aiAPI'
+import { StoryDisplay } from './StoryDisplay'
 
 interface StoryLoreWorkspaceProps {
   projectId?: string
   initialContent?: StoryLoreContent
+  projectStory?: StoryContent  // Add support for project story data
   onContentChange?: (content: StoryLoreContent) => void
   className?: string
 }
@@ -43,6 +46,7 @@ interface StoryLoreWorkspaceProps {
 export function StoryLoreWorkspace({ 
   projectId, 
   initialContent, 
+  projectStory,
   onContentChange,
   className 
 }: StoryLoreWorkspaceProps) {
@@ -87,6 +91,8 @@ export function StoryLoreWorkspace({
   const [isEditMode, setIsEditMode] = useState(false)
   const [aiChatOpen, setAiChatOpen] = useState(false)
   const [aiPrompt, setAiPrompt] = useState('')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [selectedProvider, setSelectedProvider] = useState<'huggingface' | 'replicate' | 'local'>('huggingface')
 
   // Auto-save content changes
   useEffect(() => {
@@ -96,14 +102,75 @@ export function StoryLoreWorkspace({
   }, [content, onContentChange])
 
   const handleGenerateContent = async (prompt: string) => {
+    if (!prompt.trim()) return
+    
+    setIsGenerating(true)
     try {
-      const generatedContent = await generateStoryContent(prompt, content.metadata.genre)
-      setContent(prev => ({
-        ...prev,
-        ...generatedContent
-      }))
+      const request: StoryGenerationRequest = {
+        prompt: prompt,
+        gameType: 'RPG', // This could be from project settings
+        genre: content.metadata.genre || 'fantasy',
+        tone: content.mainStoryArc.tone || 'heroic',
+        length: 'medium',
+        context: `Current story context: ${content.mainStoryArc.description || 'Starting a new adventure'}`,
+        provider: selectedProvider,
+      }
+
+      const response = await generateStory(request)
+      
+      if (response.success && response.data) {
+        const generatedText = response.data.story
+        
+        // Integrate the generated story based on the current context
+        if (selectedSection === 'world-lore') {
+          setContent(prev => ({
+            ...prev,
+            worldLore: {
+              ...prev.worldLore,
+              geography: prev.worldLore.geography + '\n\n' + generatedText
+            }
+          }))
+        } else if (selectedSection === 'main-arc') {
+          setContent(prev => ({
+            ...prev,
+            mainStoryArc: {
+              ...prev.mainStoryArc,
+              description: prev.mainStoryArc.description + '\n\n' + generatedText
+            }
+          }))
+        } else {
+          // Default to expanding the main story arc
+          setContent(prev => ({
+            ...prev,
+            mainStoryArc: {
+              ...prev.mainStoryArc,
+              description: prev.mainStoryArc.description + '\n\n' + generatedText
+            }
+          }))
+        }
+      } else {
+        console.error('Failed to generate story:', response.error?.message)
+        // Fall back to mock generation
+        const generatedContent = await generateStoryContent(prompt, content.metadata.genre)
+        setContent(prev => ({
+          ...prev,
+          ...generatedContent
+        }))
+      }
     } catch (error) {
       console.error('Failed to generate story content:', error)
+      // Fall back to mock generation
+      try {
+        const generatedContent = await generateStoryContent(prompt, content.metadata.genre)
+        setContent(prev => ({
+          ...prev,
+          ...generatedContent
+        }))
+      } catch (mockError) {
+        console.error('Mock generation also failed:', mockError)
+      }
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -521,15 +588,46 @@ export function StoryLoreWorkspace({
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <Brain className="w-5 h-5 text-accent" />
           AI Assistant
+          {isGenerating && (
+            <motion.div 
+              animate={{ rotate: 360 }} 
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="ml-auto"
+            >
+              <Gear className="w-4 h-4 text-accent" />
+            </motion.div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
-        {/* Metadata Controls */}
+        {/* AI Provider Selection */}
         <div className="space-y-4 mb-4">
+          <div>
+            <Label className="text-sm">AI Provider</Label>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {[
+                { value: 'huggingface', label: 'HuggingFace', color: 'orange' },
+                { value: 'replicate', label: 'Replicate', color: 'blue' },
+                { value: 'local', label: 'Local', color: 'green' }
+              ].map(provider => (
+                <Button
+                  key={provider.value}
+                  size="sm"
+                  variant={selectedProvider === provider.value ? 'default' : 'outline'}
+                  className="text-xs"
+                  onClick={() => setSelectedProvider(provider.value as any)}
+                  disabled={isGenerating}
+                >
+                  {provider.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <Label className="text-sm">Genre</Label>
             <div className="flex flex-wrap gap-1 mt-1">
-              {['fantasy', 'sci-fi', 'mystery', 'romance', 'adventure', 'horror'].map(genre => (
+              {STORY_GENRES.slice(0, 6).map(genre => (
                 <Button
                   key={genre}
                   size="sm"
@@ -539,8 +637,30 @@ export function StoryLoreWorkspace({
                     ...prev,
                     metadata: { ...prev.metadata, genre }
                   }))}
+                  disabled={isGenerating}
                 >
                   {genre}
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <Label className="text-sm">Story Tone</Label>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {['dark', 'serious', 'balanced', 'light'].map(tone => (
+                <Button
+                  key={tone}
+                  size="sm"
+                  variant={content.mainStoryArc.tone === tone ? 'default' : 'outline'}
+                  className="text-xs"
+                  onClick={() => setContent(prev => ({
+                    ...prev,
+                    mainStoryArc: { ...prev.mainStoryArc, tone: tone as any }
+                  }))}
+                  disabled={isGenerating}
+                >
+                  {tone}
                 </Button>
               ))}
             </div>
@@ -551,17 +671,41 @@ export function StoryLoreWorkspace({
           <div>
             <Label className="text-sm">Quick Actions</Label>
             <div className="flex flex-col gap-2 mt-2">
-              <Button size="sm" variant="outline" onClick={() => handleGenerateContent('expand world lore')}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleGenerateContent('expand world lore with rich geography, politics, and culture')}
+                disabled={isGenerating}
+              >
                 <MapPin className="w-4 h-4 mr-2" />
                 Expand World
               </Button>
-              <Button size="sm" variant="outline" onClick={() => handleGenerateContent('add new character')}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleGenerateContent('create a compelling new character with detailed backstory and motivations')}
+                disabled={isGenerating}
+              >
                 <Users className="w-4 h-4 mr-2" />
                 Add Character
               </Button>
-              <Button size="sm" variant="outline" onClick={() => handleGenerateContent('create subplot')}>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleGenerateContent('develop an engaging subplot that complements the main story')}
+                disabled={isGenerating}
+              >
                 <Target className="w-4 h-4 mr-2" />
                 Create Subplot
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleGenerateContent('add dramatic conflict and tension to the current story')}
+                disabled={isGenerating}
+              >
+                <Sword className="w-4 h-4 mr-2" />
+                Add Conflict
               </Button>
             </div>
           </div>
@@ -574,7 +718,27 @@ export function StoryLoreWorkspace({
           <Label className="text-sm mb-2">AI Storytelling Assistant</Label>
           <ScrollArea className="flex-1 border rounded-lg p-3 mb-3 min-h-32">
             <div className="text-sm text-muted-foreground">
-              Ask me anything about your story: "Make this more mysterious", "Add conflict", "Develop character relationships"...
+              <p className="mb-2">Ask me anything about your story:</p>
+              <ul className="text-xs space-y-1 list-disc list-inside">
+                <li>"Make this more mysterious"</li>
+                <li>"Add more character depth"</li>
+                <li>"Develop character relationships"</li>
+                <li>"Create plot twists"</li>
+                <li>"Expand the world-building"</li>
+              </ul>
+              {isGenerating && (
+                <div className="mt-3 p-2 bg-accent/10 rounded text-xs">
+                  <div className="flex items-center gap-2">
+                    <motion.div 
+                      animate={{ rotate: 360 }} 
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Brain className="w-3 h-3" />
+                    </motion.div>
+                    Generating story content using {selectedProvider}...
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
           <div className="flex gap-2">
@@ -583,17 +747,22 @@ export function StoryLoreWorkspace({
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !isGenerating) {
                   handleGenerateContent(aiPrompt)
                   setAiPrompt('')
                 }
               }}
+              disabled={isGenerating}
             />
-            <Button size="sm" onClick={() => {
-              handleGenerateContent(aiPrompt)
-              setAiPrompt('')
-            }}>
-              <Sparkle className="w-4 h-4" />
+            <Button 
+              size="sm" 
+              onClick={() => {
+                handleGenerateContent(aiPrompt)
+                setAiPrompt('')
+              }}
+              disabled={isGenerating || !aiPrompt.trim()}
+            >
+              {isGenerating ? <Gear className="w-4 h-4 animate-spin" /> : <Sparkle className="w-4 h-4" />}
             </Button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { GameProject, StoryContent, AssetCollection, GameplayContent, QAContent, Character, GameMechanic, Level } from './types'
+import { GameProject, StoryLoreContent, AssetCollection, GameplayContent, QAContent, Character, GameMechanic, Level } from './types'
 
 // Mock story generation data pools
 const STORY_TEMPLATES = {
@@ -127,7 +127,7 @@ export class AIMockGenerator {
     }
   }
 
-  async generateStory(prompt: string, onProgress?: (stage: string, progress: number) => void): Promise<StoryContent> {
+  async generateStory(prompt: string, onProgress?: (stage: string, progress: number) => void): Promise<StoryLoreContent> {
     onProgress?.('Analyzing prompt...', 20)
     await this.delay(800)
 
@@ -186,7 +186,7 @@ export class AIMockGenerator {
     onProgress?.('Crafting narrative...', 80)
     await this.delay(1000)
 
-    const story: StoryContent = {
+    const story: StoryLoreContent = {
       genre: genre,
       setting: this.random(template.settings),
       characters,
@@ -307,7 +307,7 @@ export class AIMockGenerator {
     }
   }
 
-  async generateGameplay(prompt: string, story?: StoryContent, onProgress?: (stage: string, progress: number) => void): Promise<GameplayContent> {
+  async generateGameplay(prompt: string, story?: StoryLoreContent, onProgress?: (stage: string, progress: number) => void): Promise<GameplayContent> {
     onProgress?.('Analyzing gameplay requirements...', 20)
     await this.delay(700)
 

@@ -23,6 +23,7 @@ import { MonitorPlay } from '@phosphor-icons/react/dist/csr/MonitorPlay'
 import { Rocket } from '@phosphor-icons/react/dist/csr/Rocket'
 import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
 import { Circle } from '@phosphor-icons/react/dist/csr/Circle'
+import { EnhancedProjectCreationDialog } from './EnhancedProjectCreationDialog'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -97,6 +98,7 @@ export function GameForgeDashboard({
 }: GameForgeDashboardProps) {
   const [gameIdea, setGameIdea] = useState('')
   const [selectedGenre, setSelectedGenre] = useState('adventure')
+  const [isEnhancedDialogOpen, setIsEnhancedDialogOpen] = useState(false)
   const [selectedArtStyle, setSelectedArtStyle] = useState('realistic')
   const [selectedPlatform, setSelectedPlatform] = useState('pc')
   const [selectedMood, setSelectedMood] = useState('balanced')
@@ -468,6 +470,14 @@ export function GameForgeDashboard({
                   <Lightbulb size={20} className="mr-2" />
                   Get Inspiration
                 </Button>
+                <Button
+                  onClick={() => setIsEnhancedDialogOpen(true)}
+                  variant="outline"
+                  size="lg"
+                  className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                >
+                  🧪 Enhanced Creation
+                </Button>
               </div>
             </div>
           </Card>
@@ -730,6 +740,13 @@ export function GameForgeDashboard({
         )}
 
       </div>
+      
+      {/* Enhanced Project Creation Dialog */}
+      <EnhancedProjectCreationDialog
+        isOpen={isEnhancedDialogOpen}
+        onClose={() => setIsEnhancedDialogOpen(false)}
+        onProjectCreated={onProjectCreate}
+      />
     </div>
   )
 }

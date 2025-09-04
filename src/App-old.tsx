@@ -13,26 +13,19 @@ import { AssetStudioWorkspace } from './components/AssetStudioWorkspace'
 import { AssetEditingStudio } from './components/AssetEditingStudio'
 import { PreviewWorkspace } from './components/PreviewWorkspace'
 import { GameplayStudio } from './components/GameplayStudio'
-import { CodeGenerationWorkspace } from './components/CodeGenerationWorkspace'
-import { ProjectCreationMockup } from './components/ProjectCreationMockup'
 import { Toaster } from './components/ui/sonner'
-import { useLocalStorage } from './hooks/use-local-storage'
+import { useProjects } from './hooks/use-projects'
 import { useIsMobile } from './hooks/use-mobile'
 import { toast } from 'sonner'
 
 function App() {
-  console.log('App component rendering...');
-  
   const [currentSection, setCurrentSection] = useState('dashboard')
   const [selectedProject, setSelectedProject] = useState<GameProject | null>(null)
   const [editingAsset, setEditingAsset] = useState<any | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [projects, setProjects] = useLocalStorage<GameProject[]>('game_projects', [])
+  const { projects, loading, error, addProject, updateProject, removeProject } = useProjects()
   const [qaProject, setQaProject] = useState<GameProject | null>(null)
   const isMobile = useIsMobile()
-
-  console.log('App state - currentSection:', currentSection);
-  console.log('App state - projects:', projects.length);
 
   // One-time cleanup of duplicate projects and initialization
   useEffect(() => {
@@ -448,50 +441,6 @@ function App() {
             </div>
           </motion.div>
         )
-      case 'code':
-        return selectedProject ? (
-          <CodeGenerationWorkspace 
-            projectId={selectedProject.id}
-            onContentChange={(content) => {
-              // Handle code content updates if needed
-              console.log('Code content updated:', content)
-            }}
-          />
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex-1 p-6 flex items-center justify-center"
-          >
-            <div className="text-center space-y-4 max-w-md">
-              <div className="w-20 h-20 mx-auto rounded-full bg-accent/20 flex items-center justify-center">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                  className="text-accent"
-                >
-                  💻
-                </motion.div>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Code Generation Studio
-                </h2>
-                <p className="text-muted-foreground mb-6">
-                  Select a project to access the AI-powered code generation workspace and create game logic, scripts, and mechanics.
-                </p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCurrentSection('dashboard')}
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Browse Projects
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        )
       case 'publishing':
         return (
           <motion.div
@@ -654,8 +603,6 @@ function App() {
             </div>
           </motion.div>
         )
-      case 'creation-test':
-        return <ProjectCreationMockup />
       default:
         return <Dashboard onProjectSelect={handleProjectSelect} onQAWorkspace={handleQAWorkspace} projects={projects} onProjectsChange={setProjects} />
     }

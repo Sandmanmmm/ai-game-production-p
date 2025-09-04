@@ -32,3 +32,40 @@ pids
 .devcontainer/
 
 .spark-workbench-id
+
+# AI Model Files (Large)
+**/models/
+**/*.safetensors
+**/*.bin
+**/*.ckpt
+**/*.pth
+**/*.h5
+**/*.onnx
+
+# Vast.ai and Docker
+docker-compose-vast.yml
+**/vast-*.log
+**/jupyter.log
+
+# Generated Images
+**/*.png
+**/*.jpg
+**/*.jpeg
+*.png
+*.jpg
+*.jpeg
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/

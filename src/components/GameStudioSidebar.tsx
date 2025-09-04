@@ -5,18 +5,26 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { AuthContext } from '@/contexts/AuthContext'
+import { useContext } from 'react'
 // Import icons directly to bypass proxy issues
 import { House } from '@phosphor-icons/react/dist/csr/House'
 import { FolderOpen } from '@phosphor-icons/react/dist/csr/FolderOpen'
 import { Book } from '@phosphor-icons/react/dist/csr/Book'
 import { Palette } from '@phosphor-icons/react/dist/csr/Palette'
 import { GameController } from '@phosphor-icons/react/dist/csr/GameController'
+import { Code } from '@phosphor-icons/react/dist/csr/Code'
 import { TestTube } from '@phosphor-icons/react/dist/csr/TestTube'
 import { MonitorPlay } from '@phosphor-icons/react/dist/csr/MonitorPlay'
 import { Rocket } from '@phosphor-icons/react/dist/csr/Rocket'
 import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { List } from '@phosphor-icons/react/dist/csr/List'
 import { X } from '@phosphor-icons/react/dist/csr/X'
+import { SignIn } from '@phosphor-icons/react/dist/csr/SignIn'
+import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
+import { User } from '@phosphor-icons/react/dist/csr/User'
+import { SignOut } from '@phosphor-icons/react/dist/csr/SignOut'
 import { cn } from '@/lib/utils'
 
 interface GameStudioSidebarProps {
@@ -30,7 +38,7 @@ interface GameStudioSidebarProps {
   className?: string
 }
 
-const navigationSections: NavigationSection[] = [
+const authNavigationSections: NavigationSection[] = [
   {
     id: 'dashboard',
     name: 'Dashboard',
@@ -63,6 +71,12 @@ const navigationSections: NavigationSection[] = [
     path: '/gameplay'
   },
   {
+    id: 'code',
+    name: 'Code Generation',
+    icon: Code,
+    path: '/code'
+  },
+  {
     id: 'qa',
     name: 'QA & Testing',
     icon: TestTube,
@@ -79,6 +93,33 @@ const navigationSections: NavigationSection[] = [
     name: 'Publishing',
     icon: Rocket,
     path: '/publishing'
+  },
+  {
+    id: 'creation-test',
+    name: '🧪 Enhanced Creation',
+    icon: Sparkle,
+    path: '/creation-test'
+  }
+]
+
+const publicNavigationSections: NavigationSection[] = [
+  {
+    id: 'dashboard',
+    name: 'Dashboard',
+    icon: House,
+    path: '/dashboard'
+  },
+  {
+    id: 'login',
+    name: 'Login',
+    icon: SignIn,
+    path: '/login'
+  },
+  {
+    id: 'register',
+    name: 'Register',
+    icon: UserPlus,
+    path: '/register'
   }
 ]
 
@@ -92,6 +133,8 @@ export function GameStudioSidebar({
   onToggleCollapse,
   className
 }: GameStudioSidebarProps) {
+  const { user, logout } = useContext(AuthContext)
+  const navigationSections = user ? authNavigationSections : publicNavigationSections
 
   return (
     <motion.div
@@ -140,7 +183,7 @@ export function GameStudioSidebar({
       <ScrollArea className="flex-1 p-4 custom-scrollbar">
         {/* Project Selector */}
         <AnimatePresence>
-          {!isCollapsed && projects.length > 0 && (
+          {!isCollapsed && user && projects.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -236,7 +279,7 @@ export function GameStudioSidebar({
         </nav>
 
         <AnimatePresence>
-          {!isCollapsed && (
+          {!isCollapsed && user && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -289,6 +332,48 @@ export function GameStudioSidebar({
 
       {/* Footer */}
       <div className="p-4 border-t border-border/30">
+        {/* User Profile Section for Authenticated Users */}
+        {user && (
+          <AnimatePresence>
+            {!isCollapsed && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.2 }}
+                className="mb-4"
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start gap-3 p-3 h-auto hover:bg-muted/50"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                        <User size={16} className="text-accent" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="text-sm font-medium truncate">{user.name || 'User'}</div>
+                        <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuItem onClick={() => onSectionChange('profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={logout} className="text-red-600">
+                      <SignOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+
         <AnimatePresence>
           {!isCollapsed && (
             <motion.div
