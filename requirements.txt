@@ -1,5 +1,5 @@
-# GameForge AI Production Dependencies
-# Generated on 2025-09-04 for production deployment
+# GameForge AI System Dependencies
+# Production-ready package list for Docker containerization
 
 # =====================================
 # CORE PYTHON PACKAGES
@@ -7,6 +7,53 @@
 pip>=23.0.0
 setuptools>=65.0.0
 wheel>=0.38.0
+
+# Core FastAPI and server components
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+aiofiles==23.2.1
+python-multipart==0.0.6
+starlette==0.27.0
+
+# Image Processing
+pillow==10.1.0
+opencv-python==4.8.1.78
+numpy==1.24.3
+scipy==1.11.4
+scikit-image==0.22.0
+
+# Model and Data Handling
+safetensors==0.4.0
+huggingface-hub==0.19.4
+datasets==2.14.6
+
+# Queue and Background Processing
+redis==5.0.1
+celery==5.3.4
+kombu==5.3.4
+
+# Utilities
+requests==2.31.0
+httpx==0.25.2
+tqdm==4.66.1
+psutil==5.9.6
+GPUtil==1.4.0
+
+# Monitoring and Logging
+prometheus-client==0.19.0
+structlog==23.2.0
+
+# Security
+cryptography==41.0.7
+PyJWT==2.8.0
+passlib==1.7.4
+bcrypt==4.1.2
+
+# Configuration
+python-dotenv==1.0.0
+pyyaml==6.0.1
+toml==0.10.2
 
 # =====================================  
 # WEB FRAMEWORK & API

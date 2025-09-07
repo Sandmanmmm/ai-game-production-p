@@ -22,11 +22,18 @@ from PIL import Image
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# GPU Server Configuration - Updated for port 8081
-GPU_ENDPOINT = "http://172.97.240.138:41392"  # Primary endpoint (currently occupied)
-# Alternative endpoint since 8080 is in use - CHECK YOUR VAST.AI PORTAL FOR PORT 8081 TUNNEL URL
+# RTX 5090 Ultimate GPU Server Configuration (🔥 LIVE & READY!)
+GPU_ENDPOINT = "https://referring-visitors-billing-economics.trycloudflare.com"  # RTX 5090 Ultimate
+# Instance Details:
+# Instance ID: 25632987
+# GPU: RTX 5090 (33.7GB VRAM, 170 CUDA cores)
+# Status: 🚀 LIVE - SDXL Ultimate Pipeline Active - XFormers Enabled!
+# Local Port: 8081 (Cloudflare tunnel handles routing)
+# Capabilities: SDXL Ultimate, High-res (up to 2048x2048), Batch processing, RTX 5090 optimization
+
+# Backup endpoints (previous RTX 4090 instances)
 GPU_ENDPOINT_ALT = "http://localhost:8081"  # Local testing
-# TODO: Update this with the actual Cloudflare tunnel URL for port 8081 from your Vast.ai portal
+# Legacy: "http://172.97.240.138:41392"  # Previous RTX 4090 instance
 
 # Use the working endpoint
 GPU_ENDPOINT = GPU_ENDPOINT  # Keep original for now
