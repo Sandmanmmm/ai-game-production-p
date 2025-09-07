@@ -1,23 +1,20 @@
 // Type exports
-export type { RealGameTemplate } from '../realTemplateGenerator'
+export type { RealGameTemplate } from './types'
 
 // Individual template exports
-export { cookieClickerTemplate } from './cookieClickerTemplate'
-export { snakeGameTemplate } from './snakeGameTemplate'
-export { flappyBirdTemplate } from './flappyBirdTemplate'
-export { platformerTemplate } from './platformerTemplate'
+export { clickerTemplate } from './clicker'
+export { snakeTemplate } from './snake'
+export { flappyTemplate } from './flappy'
 
 // Template collection for easy access
-import { cookieClickerTemplate } from './cookieClickerTemplate'
-import { snakeGameTemplate } from './snakeGameTemplate'
-import { flappyBirdTemplate } from './flappyBirdTemplate'
-import { platformerTemplate } from './platformerTemplate'
+import { clickerTemplate } from './clicker'
+import { snakeTemplate } from './snake'
+import { flappyTemplate } from './flappy'
 
 export const allTemplates = [
-  cookieClickerTemplate,
-  snakeGameTemplate,
-  flappyBirdTemplate,
-  platformerTemplate
+  clickerTemplate,
+  snakeTemplate,
+  flappyTemplate
 ]
 
 // Helper function to get template by ID
@@ -26,13 +23,51 @@ export function getTemplateById(id: string) {
 }
 
 // Helper function to get templates by category
-export function getTemplatesByCategory(category: string) {
+export function getTemplatesByCategory(category: 'beginner' | 'intermediate' | 'advanced') {
   return allTemplates.filter(template => template.category === category)
 }
 
 // Helper function to get templates by complexity
-export function getTemplatesByComplexity(complexity: string) {
+export function getTemplatesByComplexity(complexity: 'beginner' | 'intermediate' | 'advanced') {
   return allTemplates.filter(template => template.complexity === complexity)
+}
+
+// Helper function to get templates by tag
+export function getTemplatesByTag(tag: string) {
+  return allTemplates.filter(template => template.tags.includes(tag))
+}
+
+// Helper function to get templates by game type
+export function getTemplatesByGameType(gameType: string) {
+  return allTemplates.filter(template => template.gameStructure.gameType === gameType)
+}
+
+// Get all available tags
+export function getAvailableTags(): string[] {
+  const tags = new Set<string>()
+  allTemplates.forEach(template => {
+    template.tags.forEach(tag => tags.add(tag))
+  })
+  return Array.from(tags).sort()
+}
+
+// Get all available game types
+export function getAvailableGameTypes(): string[] {
+  const gameTypes = new Set<string>()
+  allTemplates.forEach(template => {
+    gameTypes.add(template.gameStructure.gameType)
+  })
+  return Array.from(gameTypes).sort()
+}
+
+// Search templates by query
+export function searchTemplates(query: string) {
+  const lowerQuery = query.toLowerCase()
+  return allTemplates.filter(template => 
+    template.name.toLowerCase().includes(lowerQuery) ||
+    template.description.toLowerCase().includes(lowerQuery) ||
+    template.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+  )
 }
 
 // Template metadata for quick reference
