@@ -1,0 +1,26 @@
+# GameForge AI System Dependencies - Lightweight for Docker Build
+# This avoids bus errors during pip install by installing only essential packages
+
+# Core server components (lightweight)
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+aiofiles==23.2.1
+python-multipart==0.0.6
+
+# Basic utilities
+requests==2.31.0
+python-dotenv==1.0.0
+
+# Queue and caching
+redis==5.0.1
+
+# Basic image processing (lightweight)
+pillow==10.1.0
+numpy==1.24.3
+
+# Monitoring
+prometheus-client==0.19.0
+
+# Note: Heavy ML dependencies (torch, transformers, diffusers) 
+# are installed separately in Dockerfile to prevent memory issues

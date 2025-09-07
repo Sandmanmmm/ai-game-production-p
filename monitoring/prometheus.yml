@@ -1,0 +1,58 @@
+# GameForge AI System - Prometheus Configuration
+# Monitoring and Metrics Collection
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # GameForge AI Service
+  - job_name: 'gameforge-ai'
+    static_configs:
+      - targets: ['gameforge-ai-gpu:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis Monitoring
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+
+  # Nginx Monitoring
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/metrics'
+
+  # Node Exporter (if available)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # GPU Metrics (via custom exporter)
+  - job_name: 'gpu-metrics'
+    static_configs:
+      - targets: ['gameforge-ai-gpu:9091']
+    metrics_path: '/gpu/metrics'
+    scrape_interval: 10s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# Alert Rules
+rule_files:
+  - "alert_rules.yml"

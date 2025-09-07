@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+images:
+- name: gameforge-api
+  newTag: latest
+kind: Kustomization
+namespace: gameforge
+resources:
+- namespace.yaml
+- configmap.yaml
+- secret.yaml
+- postgres-deployment.yaml
+- redis-deployment.yaml
+- gameforge-deployment.yaml
+- hpa.yaml
+- service.yaml
+- ingress.yaml
