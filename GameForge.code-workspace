@@ -1,0 +1,23 @@
+﻿{
+    "extensions":  {
+                       "recommendations":  [
+                                               "ms-vscode.vscode-typescript-next",
+                                               "ms-python.python",
+                                               "ms-vscode.vscode-docker",
+                                               "redhat.vscode-yaml",
+                                               "ms-kubernetes-tools.vscode-kubernetes-tools",
+                                               "bradlc.vscode-tailwindcss",
+                                               "esbenp.prettier-vscode"
+                                           ]
+                   },
+    "folders":  [
+                    {
+                        "name":  "GameForge",
+                        "path":  "D:\\GameForge\\ai-game-production-p"
+                    }
+                ],
+    "settings":  {
+                     "python.defaultInterpreterPath":  "D:\\GameForge\\ai-game-production-p\\.venv\\Scripts\\python.exe",
+                     "terminal.integrated.cwd":  "D:\\GameForge\\ai-game-production-p"
+                 }
+}
