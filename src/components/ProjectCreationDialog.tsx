@@ -1,10 +1,8 @@
-import { useState, useContext } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProject } from '@/lib/types'
 import { generateMockProject } from '@/lib/mockData'
 import { aiMockGenerator } from '@/lib/aiMockGenerator'
-import { projectAPI } from '@/lib/projectAPI'
-import { AuthContext } from '@/contexts/AuthContext'
 import { PipelineVisualizer, createPipelineStages } from '@/components/PipelineVisualizer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -47,7 +45,6 @@ export function ProjectCreationDialog({
   onProjectCreated,
   onQAWorkspace
 }: ProjectCreationDialogProps) {
-  const { user, token } = useContext(AuthContext)
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [currentPhase, setCurrentPhase] = useState<'input' | 'generating' | 'pipeline'>('input')
@@ -58,50 +55,23 @@ export function ProjectCreationDialog({
   const handleCreateProject = async () => {
     if (!prompt.trim() || isGenerating) return
 
-    // Check authentication
-    if (!user || !token) {
-      toast.error('Please log in to create a project.')
-      return
-    }
-
     setIsGenerating(true)
     setCurrentPhase('generating')
 
     try {
-      // Create initial project in database
-      console.log('🎮 Creating project with prompt:', prompt)
-      
-      // Generate a base project locally first
+      // Start with a basic project
       const baseProject = generateMockProject(prompt)
-      
-      // Save to database via API
-      const savedProject = await projectAPI.createProject({
-        title: baseProject.title,
-        description: baseProject.description,
-        prompt: prompt,
-        status: 'concept',
-        progress: 0,
-        pipeline: createPipelineStages().map((stage, index) => ({
-          id: stage.id,
-          name: stage.name,
-          status: 'pending' as const,
-          progress: 0,
-          order: index + 1
-        }))
-      })
-
-      console.log('✅ Project saved to database:', savedProject.id)
-      setGeneratedProject(savedProject)
+      setGeneratedProject(baseProject)
 
       // Switch to pipeline view
       setTimeout(() => {
         setCurrentPhase('pipeline')
-        startAIPipeline(savedProject)
+        startAIPipeline(baseProject) // Pass the project directly
       }, 1500)
 
     } catch (error) {
-      console.error('❌ Error creating project:', error)
-      toast.error(`Failed to create project: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Error generating project:', error)
+      toast.error('Failed to generate project. Please try again.')
       setIsGenerating(false)
       setCurrentPhase('input')
     }
@@ -155,46 +125,36 @@ export function ProjectCreationDialog({
       }
 
       // QA Ready callback - opens QA workspace when QA stage completes
-      const onQAReady = async (generatedContent?: Partial<GameProject>): Promise<boolean> => {
+      const onQAReady = (generatedContent?: Partial<GameProject>): boolean => {
         console.log('🔬 QA Ready callback triggered!', { currentProject, onQAWorkspace, generatedContent })
         
         if (currentProject && onQAWorkspace) {
-          try {
-            // Update project in database with AI-generated content
-            const enhancedProject: GameProject = {
-              ...currentProject,
-              ...generatedContent,
-              pipeline: stages.map(stage => ({
-                id: stage.id,
-                name: stage.name,
-                status: stage.id === 'qa' ? 'complete' : stage.id === 'publish' ? 'pending' : 'complete',
-                progress: stage.id === 'publish' ? 0 : 100,
-                order: stages.indexOf(stage) + 1
-              }))
-            }
-            
-            // Save enhanced project to database
-            console.log('💾 Updating project in database with AI content...')
-            const updatedProject = await projectAPI.updateProject(currentProject.id, enhancedProject)
-            
-            console.log('🔬 Opening QA workspace for project:', updatedProject.title)
-            
-            // Close dialog and notify parent
-            onProjectCreated(updatedProject)
-            handleClose()
-            
-            // Add toast notification
-            toast.success('🔬 QA Testing complete! Opening QA Studio...', { duration: 2000 })
-            
-            setTimeout(() => {
-              onQAWorkspace(updatedProject)
-            }, 800)
-            return true
-          } catch (error) {
-            console.error('❌ Error updating project for QA:', error)
-            toast.error('Failed to prepare QA workspace')
-            return false
+          // Create enhanced project with QA stage complete
+          const enhancedProject: GameProject = {
+            ...currentProject,
+            ...generatedContent, // Include all the AI generated content
+            pipeline: stages.map(stage => ({
+              id: stage.id,
+              name: stage.name,
+              status: stage.id === 'qa' ? 'complete' : stage.id === 'publish' ? 'pending' : 'complete',
+              progress: stage.id === 'publish' ? 0 : 100,
+              order: stages.indexOf(stage) + 1
+            }))
           }
+          
+          console.log('🔬 Opening QA workspace for project:', enhancedProject.title)
+          
+          // Close dialog and save project first
+          onProjectCreated(enhancedProject)
+          handleClose()
+          
+          // Add toast notification
+          toast.success('🔬 QA Testing complete! Opening QA Studio...', { duration: 2000 })
+          
+          setTimeout(() => {
+            onQAWorkspace(enhancedProject)
+          }, 800) // Slightly longer delay to ensure smooth transition
+          return true // Signal that QA was handled
         }
         
         console.warn('🔬 QA Ready callback called but missing project or workspace handler')
@@ -214,37 +174,25 @@ export function ProjectCreationDialog({
       // If QA callback wasn't triggered or didn't handle it, complete normally
       if (currentProject && Object.keys(generatedContent).length > 0) {
         console.log('⚠️ Falling back to normal project completion (no QA workspace or not handled)')
-        
-        try {
-          const enhancedProject: GameProject = {
-            ...currentProject,
-            ...generatedContent,
-            pipeline: stages.map(stage => ({
-              id: stage.id,
-              name: stage.name,
-              status: stage.id === 'publish' ? 'pending' : 'complete',
-              progress: stage.id === 'publish' ? 0 : 100,
-              order: stages.indexOf(stage) + 1
-            }))
-          }
-
-          // Update project in database with AI content
-          console.log('💾 Updating completed project in database...')
-          const updatedProject = await projectAPI.updateProject(currentProject.id, enhancedProject)
-          
-          // Final completion
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          
-          onProjectCreated(updatedProject)
-          toast.success('🎮 Game project created successfully!')
-          
-          handleClose()
-        } catch (error) {
-          console.error('❌ Error updating completed project:', error)
-          toast.error('Project created but failed to save AI content')
-          onProjectCreated(currentProject)
-          handleClose()
+        const enhancedProject: GameProject = {
+          ...currentProject,
+          ...generatedContent,
+          pipeline: stages.map(stage => ({
+            id: stage.id,
+            name: stage.name,
+            status: stage.id === 'publish' ? 'pending' : 'complete',
+            progress: stage.id === 'publish' ? 0 : 100,
+            order: stages.indexOf(stage) + 1
+          }))
         }
+
+        // Final completion
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        onProjectCreated(enhancedProject)
+        toast.success('🎮 Game project created successfully!')
+        
+        handleClose()
       } else {
         console.log('🔬 QA workspace flow completed, skipping normal completion')
       }

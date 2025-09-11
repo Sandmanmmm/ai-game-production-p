@@ -1,0 +1,245 @@
+# GameForge Security Configuration
+# ========================================================================
+# Comprehensive security hardening configuration for production deployment
+# Includes seccomp profiles, AppArmor policies, and security contexts
+# ========================================================================
+
+# Security Context Templates for Docker Compose
+# ========================================================================
+
+# Application Security Context (Most Restrictive)
+x-app-security: &app-security
+  user: "1001:1001"
+  read_only: true
+  tmpfs:
+    - /tmp:noexec,nosuid,size=500m
+    - /app/tmp:noexec,nosuid,size=500m
+  security_opt:
+    - no-new-privileges:true
+    - seccomp=./security/seccomp/gameforge-app.json
+    - apparmor:gameforge-app
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN
+    - SETUID
+    - SETGID
+    - FOWNER
+    - DAC_OVERRIDE
+
+# Web Server Security Context
+x-web-security: &web-security
+  user: "101:101"
+  read_only: true
+  tmpfs:
+    - /tmp:noexec,nosuid,size=100m
+    - /var/cache/nginx:noexec,nosuid,size=500m
+    - /var/run:noexec,nosuid,size=100m
+  security_opt:
+    - no-new-privileges:true
+    - seccomp=./security/seccomp/nginx.json
+    - apparmor:nginx-container
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN
+    - SETUID
+    - SETGID
+    - NET_BIND_SERVICE
+    - DAC_OVERRIDE
+
+# Database Security Context
+x-db-security: &db-security
+  read_only: false  # Databases need write access to data directories
+  tmpfs:
+    - /tmp:noexec,nosuid,size=100m
+    - /var/run:noexec,nosuid,size=100m
+  security_opt:
+    - no-new-privileges:true
+    - seccomp=./security/seccomp/database.json
+    - apparmor:database-container
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN
+    - SETUID
+    - SETGID
+    - FOWNER
+    - DAC_OVERRIDE
+
+# Monitoring Security Context
+x-monitoring-security: &monitoring-security
+  user: "472:472"  # Grafana user
+  read_only: true
+  tmpfs:
+    - /tmp:noexec,nosuid,size=100m
+  security_opt:
+    - no-new-privileges:true
+    - seccomp:unconfined  # Monitoring tools need broader access
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN
+    - SETUID
+    - SETGID
+
+# Backup Security Context
+x-backup-security: &backup-security
+  user: "1002:1002"
+  read_only: true
+  tmpfs:
+    - /tmp:noexec,nosuid,size=1g
+  security_opt:
+    - no-new-privileges:true
+    - seccomp=./security/seccomp/database.json  # Similar to database for backup access
+  cap_drop:
+    - ALL
+  cap_add:
+    - CHOWN
+    - DAC_OVERRIDE
+
+# Resource Limits Templates
+# ========================================================================
+
+# Application Resource Limits
+x-app-resources: &app-resources
+  deploy:
+    resources:
+      limits:
+        memory: 8G
+        cpus: '4.0'
+        pids: 1000
+      reservations:
+        memory: 2G
+        cpus: '1.0'
+    restart_policy:
+      condition: on-failure
+      delay: 30s
+      max_attempts: 3
+      window: 120s
+
+# Database Resource Limits
+x-db-resources: &db-resources
+  deploy:
+    resources:
+      limits:
+        memory: 4G
+        cpus: '2.0'
+        pids: 500
+      reservations:
+        memory: 1G
+        cpus: '0.5'
+    restart_policy:
+      condition: on-failure
+      delay: 30s
+      max_attempts: 3
+      window: 120s
+
+# Web Server Resource Limits
+x-web-resources: &web-resources
+  deploy:
+    resources:
+      limits:
+        memory: 1G
+        cpus: '1.0'
+        pids: 200
+      reservations:
+        memory: 256M
+        cpus: '0.25'
+    restart_policy:
+      condition: on-failure
+      delay: 10s
+      max_attempts: 5
+      window: 60s
+
+# Network Security Configuration
+# ========================================================================
+
+# Network isolation policies
+networks:
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "false"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+  backend:
+    driver: bridge
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/24
+          gateway: 172.21.0.1
+
+  monitoring:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.0.0/24
+          gateway: 172.22.0.1
+
+# Volume Security Configuration
+# ========================================================================
+
+# Secure volume mount options
+x-secure-volume: &secure-volume
+  type: bind
+  bind:
+    propagation: rprivate
+
+# Health Check Templates
+# ========================================================================
+
+x-app-healthcheck: &app-healthcheck
+  test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+  interval: 30s
+  timeout: 15s
+  retries: 3
+  start_period: 120s
+
+x-db-healthcheck: &db-healthcheck
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
+
+x-web-healthcheck: &web-healthcheck
+  test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 30s
+
+# Security Scanning Configuration
+# ========================================================================
+
+# Vulnerability scanning labels
+x-security-labels: &security-labels
+  labels:
+    - "security.scan=enabled"
+    - "security.profile=production"
+    - "security.compliance=required"
+    - "security.audit=enabled"
+
+# Logging Security Configuration
+# ========================================================================
+
+x-secure-logging: &secure-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+    compress: "true"
+    labels: "service,environment,security"

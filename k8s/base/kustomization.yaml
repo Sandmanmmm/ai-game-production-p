@@ -1,0 +1,113 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: gameforge-secret-rotation-base
+  annotations:
+    config.kubernetes.io/local-config: "true"
+  
+resources:
+- namespace.yaml
+- configmap.yaml
+- secrets.yaml
+- rbac.yaml
+- cronjobs.yaml
+- daemonset.yaml
+- monitoring.yaml
+- grafana-config.yaml
+
+# Updated from deprecated commonLabels  
+labels:
+- pairs:
+    app.kubernetes.io/instance: gameforge-production
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/version: v1.0.0
+    environment: base
+    component: secret-rotation
+  includeSelectors: false
+
+# Generate annotations for all resources
+commonAnnotations:
+  deployment.kubernetes.io/revision: "1"
+  config.kubernetes.io/origin: |
+    path: k8s/base/kustomization.yaml
+
+# Set name prefix for all resources
+namePrefix: gameforge-
+
+# Image configurations
+images:
+- name: gameforge/secret-rotation
+  newTag: v1.0.0
+- name: gameforge/security-monitor
+  newTag: v1.0.0
+- name: prom/prometheus
+  newTag: v2.47.0
+- name: grafana/grafana
+  newTag: 10.1.0
+- name: prom/node-exporter
+  newTag: v1.6.1
+- name: prom/alertmanager
+  newTag: v0.25.0
+
+# Configuration generators
+configMapGenerator:
+- name: deployment-info
+  literals:
+  - deployment.time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  - deployment.version=v1.0.0
+  - deployment.environment=base
+  
+# Secret generators  
+secretGenerator:
+- name: deployment-secrets
+  type: Opaque
+  options:
+    disableNameSuffixHash: true
+  literals:
+  - deployment.key=base-deployment
+
+# Replica configurations
+replicas:
+- name: prometheus
+  count: 1
+- name: grafana
+  count: 1
+
+# Patch configurations for strategic merge
+patchesStrategicMerge:
+- |-
+  apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: secret-rotation-config
+    namespace: gameforge-security
+  data:
+    base-overlay: "applied"
+
+# JSON6902 patches for precise modifications
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /metadata/labels/kustomize.applied
+      value: "true"
+
+# Resource transformations
+transformers:
+- |-
+  apiVersion: builtin
+  kind: NamespaceTransformer
+  metadata:
+    name: namespace-transformer
+  namespace: gameforge-security
+  setRoleBindingSubjects: allServiceAccounts
+  unsetOnly: false
+  fieldSpecs:
+  - path: metadata/namespace
+    create: true

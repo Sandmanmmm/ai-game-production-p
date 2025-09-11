@@ -1,0 +1,89 @@
+#include <tunables/global>
+
+# Nginx Web Server AppArmor Profile
+# Restrictive profile for Nginx in containers
+profile nginx-container flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+  #include <abstractions/openssl>
+  #include <abstractions/ssl_certs>
+
+  # Capabilities needed for Nginx
+  capability chown,
+  capability setuid,
+  capability setgid,
+  capability net_bind_service,
+  capability dac_override,
+
+  # Deny dangerous capabilities
+  deny capability sys_admin,
+  deny capability sys_module,
+  deny capability sys_rawio,
+  deny capability sys_boot,
+  deny capability sys_ptrace,
+
+  # Network access
+  network tcp,
+  network udp,
+
+  # Nginx binaries
+  /usr/sbin/nginx ix,
+  /usr/bin/nginx ix,
+
+  # Nginx configuration
+  /etc/nginx/ r,
+  /etc/nginx/** r,
+
+  # Web content
+  /var/www/ r,
+  /var/www/** r,
+  /usr/share/nginx/ r,
+  /usr/share/nginx/** r,
+
+  # SSL certificates
+  /etc/ssl/ r,
+  /etc/ssl/** r,
+  /etc/letsencrypt/ r,
+  /etc/letsencrypt/** r,
+
+  # Logs
+  /var/log/nginx/ rw,
+  /var/log/nginx/** rw,
+
+  # Runtime files
+  /var/run/nginx.pid rw,
+  /var/cache/nginx/ rw,
+  /var/cache/nginx/** rw,
+  /tmp/ rw,
+  /tmp/** rw,
+
+  # System libraries
+  /lib/** r,
+  /lib64/** r,
+  /usr/lib/** r,
+  /usr/lib64/** r,
+
+  # Proc access (limited)
+  @{PROC}/cpuinfo r,
+  @{PROC}/meminfo r,
+  @{PROC}/stat r,
+  @{PROC}/sys/kernel/ostype r,
+
+  # System information
+  /etc/hosts r,
+  /etc/nsswitch.conf r,
+  /etc/resolv.conf r,
+  /etc/passwd r,
+  /etc/group r,
+
+  # Deny sensitive areas
+  deny /boot/** rwklx,
+  deny /etc/shadow rwklx,
+  deny /root/** rwklx,
+  deny /home/** rwklx,
+  deny @{PROC}/kcore r,
+  deny @{PROC}/kallsyms r,
+  deny /sys/firmware/** rwklx,
+  deny mount,
+  deny umount,
+}

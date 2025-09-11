@@ -1,0 +1,138 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+metadata:
+  name: ha-node-affinity
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    component.gameforge.com/type: "high-availability-nodeaffinity"
+
+# Node affinity patches for multi-node deployment
+patches:
+# Prometheus - prefer compute nodes, ensure distribution across nodes
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/affinity
+      value:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - compute
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: tier
+                operator: In
+                values:
+                - worker
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - prometheus
+              topologyKey: kubernetes.io/hostname
+
+# Grafana - prefer monitoring node
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-grafana
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/affinity
+      value:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - monitoring
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: tier
+                operator: In
+                values:
+                - worker
+
+# Security monitor DaemonSet - ensure it runs on all worker nodes
+- target:
+    group: apps
+    version: v1
+    kind: DaemonSet
+    name: gameforge-security-monitor
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/affinity
+      value:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: tier
+                operator: In
+                values:
+                - worker
+    - op: add
+      path: /spec/template/spec/tolerations
+      value:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+
+# Add resource requests and limits for better scheduling
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources
+      value:
+        requests:
+          memory: "4Gi"
+          cpu: "2000m"
+        limits:
+          memory: "8Gi"
+          cpu: "4000m"
+
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-grafana
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources
+      value:
+        requests:
+          memory: "2Gi"
+          cpu: "1000m"
+        limits:
+          memory: "4Gi"
+          cpu: "2000m"

@@ -1,0 +1,30 @@
+# AWS-specific service patches
+# Remove MetalLB annotations and add AWS annotations
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameforge-grafana-external-prod
+  namespace: gameforge-monitoring
+  annotations:
+    # Remove MetalLB annotations
+    metallb.universe.tf/allow-shared-ip: null
+    metallb.universe.tf/address-pool: null
+    # Add AWS Load Balancer annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameforge-prometheus-external-prod
+  namespace: gameforge-monitoring
+  annotations:
+    # Remove MetalLB annotations
+    metallb.universe.tf/allow-shared-ip: null
+    metallb.universe.tf/address-pool: null
+    # Add AWS Load Balancer annotations
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"

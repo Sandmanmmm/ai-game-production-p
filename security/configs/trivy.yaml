@@ -1,0 +1,65 @@
+# Trivy Scanner Configuration
+scanner:
+  # Skip files and directories
+  skip-files:
+    - "*.md"
+    - "*.txt"
+    - "test/*"
+    - "tests/*"
+    - "node_modules/*"
+
+  # Skip specific vulnerabilities
+  skip-dirs:
+    - /tmp
+    - /var/tmp
+    - /usr/share/doc
+
+  # Severity levels to report
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+    - LOW
+
+  # Vulnerability databases to use
+  vulnerability-db:
+    - ghsa
+    - nvd
+    - redhat
+    - debian
+    - ubuntu
+
+  # Scan options
+  options:
+    timeout: 300s
+    parallel: 5
+    cache-dir: /tmp/trivy-cache
+
+# Policy configurations
+policies:
+  # Fail build on critical/high vulnerabilities
+  fail-on:
+    - CRITICAL
+    - HIGH
+
+  # Maximum allowed vulnerabilities by severity
+  max-allowed:
+    CRITICAL: 0
+    HIGH: 5
+    MEDIUM: 20
+    LOW: 50
+
+  # Ignore specific CVEs (use with caution)
+  ignore:
+    - CVE-2023-XXXXX  # Example: False positive
+
+  # License policy
+  licenses:
+    allowed:
+      - MIT
+      - Apache-2.0
+      - BSD-3-Clause
+      - ISC
+    forbidden:
+      - GPL-3.0
+      - AGPL-3.0

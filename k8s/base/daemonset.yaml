@@ -1,0 +1,310 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: security-monitor
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge-security-monitor
+    app.kubernetes.io/component: daemonset
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gameforge-security-monitor
+      app.kubernetes.io/component: monitor
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gameforge-security-monitor
+        app.kubernetes.io/component: monitor
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9100"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: monitoring-sa
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      # Allow running on master nodes
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      # Allow running on tainted nodes
+      - operator: Exists
+        effect: NoExecute
+      - operator: Exists
+        effect: NoSchedule
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534  # nobody user
+        runAsGroup: 65534
+        fsGroup: 65534
+      containers:
+      # Node Exporter for system metrics
+      - name: node-exporter
+        image: prom/node-exporter:latest
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: metrics
+          protocol: TCP
+        args:
+        - '--path.procfs=/host/proc'
+        - '--path.sysfs=/host/sys'
+        - '--path.rootfs=/host/root'
+        - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+        - '--collector.netdev.device-exclude=^(veth.*|docker.*|br-.*|lo)$$'
+        - '--collector.textfile.directory=/var/lib/node_exporter/textfile_collector'
+        - '--web.listen-address=:9100'
+        - '--web.telemetry-path=/metrics'
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        - name: root
+          mountPath: /host/root
+          mountPropagation: HostToContainer
+          readOnly: true
+        - name: textfile-collector
+          mountPath: /var/lib/node_exporter/textfile_collector
+          readOnly: false
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 9100
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9100
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      
+      # Custom Security Monitor
+      - name: security-monitor
+        image: gameforge/security-monitor:latest
+        ports:
+        - containerPort: 9101
+          name: sec-metrics
+          protocol: TCP
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: VAULT_ADDR
+          valueFrom:
+            secretKeyRef:
+              name: vault-credentials
+              key: vault-addr
+              optional: true
+        volumeMounts:
+        - name: security-config
+          mountPath: /etc/security-monitor
+          readOnly: true
+        - name: textfile-collector
+          mountPath: /var/lib/node_exporter/textfile_collector
+          readOnly: false
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9101
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 9101
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: root
+        hostPath:
+          path: /
+      - name: textfile-collector
+        hostPath:
+          path: /var/lib/node_exporter/textfile_collector
+          type: DirectoryOrCreate
+      - name: security-config
+        configMap:
+          name: security-monitor-config
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-monitor-config
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge-security-monitor
+    app.kubernetes.io/component: config
+data:
+  config.yml: |
+    # Security Monitor Configuration
+    version: "1.0"
+    
+    # Monitoring Configuration
+    monitoring:
+      enabled: true
+      port: 9101
+      metrics_path: "/metrics"
+      health_path: "/health"
+      ready_path: "/ready"
+      
+    # Security Checks
+    security_checks:
+      vault_connectivity:
+        enabled: true
+        interval: "30s"
+        timeout: "10s"
+        
+      secret_rotation_status:
+        enabled: true
+        interval: "5m"
+        timeout: "30s"
+        
+      certificate_expiry:
+        enabled: true
+        interval: "1h"
+        warning_days: 30
+        critical_days: 7
+        
+      failed_authentications:
+        enabled: true
+        interval: "1m"
+        threshold: 10
+        
+      privileged_operations:
+        enabled: true
+        interval: "30s"
+        
+    # Node Security Monitoring
+    node_security:
+      file_integrity:
+        enabled: true
+        paths:
+          - "/etc/passwd"
+          - "/etc/shadow"
+          - "/etc/sudoers"
+          - "/etc/hosts"
+        interval: "5m"
+        
+      process_monitoring:
+        enabled: true
+        suspicious_processes:
+          - "nc"
+          - "ncat"
+          - "netcat"
+          - "socat"
+          - "telnet"
+        interval: "30s"
+        
+      network_monitoring:
+        enabled: true
+        suspicious_ports:
+          - 1337
+          - 31337
+          - 4444
+          - 5555
+        interval: "1m"
+        
+    # Alerting
+    alerting:
+      enabled: true
+      severity_levels:
+        - "info"
+        - "warning"
+        - "critical"
+        
+    # Logging
+    logging:
+      level: "info"
+      format: "json"
+      output: "stdout"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-monitor-metrics
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge-security-monitor
+    app.kubernetes.io/component: service
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9100"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for DaemonSet
+  selector:
+    app.kubernetes.io/name: gameforge-security-monitor
+    app.kubernetes.io/component: monitor
+  ports:
+  - name: node-metrics
+    port: 9100
+    targetPort: metrics
+    protocol: TCP
+  - name: security-metrics
+    port: 9101
+    targetPort: sec-metrics
+    protocol: TCP

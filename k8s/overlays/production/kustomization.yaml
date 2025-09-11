@@ -1,0 +1,203 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: gameforge-secret-rotation-production
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    production.gameforge.com/deployment-tier: "production"
+
+# Base configuration
+resources:
+- ../../base
+- external-services.yaml
+
+# Production components
+components:
+- ../../components/high-availability
+- ../../components/security-hardening
+- ../../components/node-affinity
+
+# Production-specific labels
+labels:
+- pairs:
+    environment: production
+    tier: production
+    security.level: enterprise
+  
+# Production annotations
+commonAnnotations:
+  deployment.kubernetes.io/environment: "production"
+  security.kubernetes.io/policy: "restricted"
+  monitoring.kubernetes.io/scrape: "true"
+
+# Name suffix for production
+nameSuffix: -prod
+
+# Production image tags
+images:
+- name: gameforge/secret-rotation
+  newTag: v1.0.0-production
+- name: gameforge/security-monitor
+  newTag: v1.0.0-production
+- name: prom/prometheus
+  newTag: v2.47.0
+- name: grafana/grafana
+  newTag: 10.1.0
+- name: prom/node-exporter
+  newTag: v1.6.1
+- name: prom/alertmanager
+  newTag: v0.25.0
+
+# Production replica counts
+replicas:
+- name: gameforge-prometheus
+  count: 2
+- name: gameforge-grafana
+  count: 1
+
+# Production configuration generators
+configMapGenerator:
+- name: production-config
+  literals:
+  - environment=production
+  - log_level=INFO
+  - enable_debug=false
+  - vault_max_retries=5
+  - rotation_timeout=7200
+  - monitoring_interval=30
+  - health_check_interval=60
+  - backup_retention_days=90
+  - alert_severity_threshold=warning
+  options:
+    disableNameSuffixHash: false
+
+- name: monitoring-config
+  literals:
+  - prometheus_retention=90d
+  - prometheus_storage=50Gi
+  - grafana_storage=10Gi
+  - alertmanager_retention=30d
+  - scrape_interval=30s
+  - evaluation_interval=30s
+  options:
+    disableNameSuffixHash: false
+
+# Production secret generators
+secretGenerator:
+- name: production-secrets
+  type: Opaque
+  options:
+    disableNameSuffixHash: true
+  literals:
+  - database_max_connections=100
+  - api_rate_limit=1000
+  - session_timeout=3600
+  - max_concurrent_rotations=5
+
+# Production-specific patches
+patches:
+- path: production-patches.yaml
+
+# JSON patches for production-specific configurations
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 2
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: 2Gi
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 4Gi
+
+# Grafana production configuration
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-grafana
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: GF_SERVER_ROOT_URL
+        value: https://grafana.gameforge.com
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: GF_SECURITY_COOKIE_SECURE
+        value: "true"
+    - op: add
+      path: /spec/template/spec/containers/0/env/-
+      value:
+        name: GF_SECURITY_STRICT_TRANSPORT_SECURITY
+        value: "true"
+
+# Security monitoring DaemonSet production configuration
+- target:
+    group: apps
+    version: v1
+    kind: DaemonSet
+    name: gameforge-security-monitor
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/1/env/-
+      value:
+        name: PRODUCTION_MODE
+        value: "true"
+    - op: add
+      path: /spec/template/spec/containers/1/env/-
+      value:
+        name: AUDIT_LEVEL
+        value: "strict"
+    - op: replace
+      path: /spec/template/spec/containers/1/resources/requests/memory
+      value: 256Mi
+    - op: replace
+      path: /spec/template/spec/containers/1/resources/limits/memory
+      value: 1Gi
+
+# Production CronJob configurations
+- target:
+    group: batch
+    version: v1
+    kind: CronJob
+    name: gameforge-secret-rotation-database
+    namespace: gameforge-security
+  patch: |-
+    - op: replace
+      path: /spec/jobTemplate/spec/template/spec/containers/0/args/1
+      value: database
+    - op: remove
+      path: /spec/jobTemplate/spec/template/spec/containers/0/args/2
+    - op: add
+      path: /spec/jobTemplate/spec/template/spec/containers/0/env/-
+      value:
+        name: PRODUCTION_MODE
+        value: "true"
+
+# TLS rotation schedule adjustment for production
+- target:
+    group: batch
+    version: v1
+    kind: CronJob
+    name: gameforge-secret-rotation-tls
+    namespace: gameforge-security
+  patch: |-
+    - op: replace
+      path: /spec/schedule
+      value: "0 2 1,15 * *"
+    - op: add
+      path: /spec/jobTemplate/spec/template/spec/containers/0/env/-
+      value:
+        name: CERT_RENEWAL_DAYS
+        value: "30"

@@ -1,0 +1,37 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
+rule_files:
+  - "security_rules.yml"
+
+scrape_configs:
+  - job_name: 'trivy-exporter'
+    static_configs:
+      - targets: ['trivy-server:4954']
+    metrics_path: /metrics
+    scrape_interval: 300s
+
+  - job_name: 'harbor-exporter'
+    static_configs:
+      - targets: ['harbor-core:8080']
+    metrics_path: /api/v2.0/metrics
+    scrape_interval: 60s
+
+  - job_name: 'defectdojo-exporter'
+    static_configs:
+      - targets: ['defectdojo:8000']
+    metrics_path: /metrics
+    scrape_interval: 120s
+
+  - job_name: 'gameforge-security'
+    static_configs:
+      - targets: ['gameforge-app:8080']
+    metrics_path: /actuator/prometheus
+    scrape_interval: 30s
+    scrape_timeout: 10s

@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameforge-grafana-external
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: monitoring-external
+    cloud.gameforge.com/tier: "external-access"
+  annotations:
+    # MetalLB annotations
+    metallb.universe.tf/allow-shared-ip: "gameforge-monitoring"
+    metallb.universe.tf/address-pool: "first-pool"
+    # Cloud provider annotations (uncomment as needed)
+    # service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    # service.beta.kubernetes.io/azure-load-balancer-resource-group: "gameforge-resources"
+    # cloud.google.com/load-balancer-type: "External"
+    # Nginx ingress annotations for HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  type: LoadBalancer
+  loadBalancerSourceRanges:
+  - 0.0.0.0/0  # Configure for production with specific IP ranges
+  selector:
+    app.kubernetes.io/name: grafana
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 3000
+    protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameforge-prometheus-external
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: monitoring-external
+    cloud.gameforge.com/tier: "external-access"
+  annotations:
+    # MetalLB annotations
+    metallb.universe.tf/allow-shared-ip: "gameforge-monitoring"
+    metallb.universe.tf/address-pool: "first-pool"
+    # Cloud provider annotations (uncomment as needed)
+    # service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    # service.beta.kubernetes.io/azure-load-balancer-resource-group: "gameforge-resources"
+    # cloud.google.com/load-balancer-type: "External"
+spec:
+  type: LoadBalancer
+  loadBalancerSourceRanges:
+  - 0.0.0.0/0  # Configure for production with specific IP ranges
+  selector:
+    app.kubernetes.io/name: prometheus
+  ports:
+  - name: http
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  sessionAffinity: ClientIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gameforge-monitoring-ingress
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge-monitoring
+    app.kubernetes.io/component: ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  tls:
+  - hosts:
+    - grafana.gameforge.com
+    - prometheus.gameforge.com
+    secretName: gameforge-monitoring-tls
+  rules:
+  - host: grafana.gameforge.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gameforge-grafana-prod
+            port:
+              number: 3000
+  - host: prometheus.gameforge.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gameforge-prometheus-prod
+            port:
+              number: 9090

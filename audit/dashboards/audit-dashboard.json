@@ -1,0 +1,212 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "GameForge Audit Trail Dashboard",
+    "tags": ["audit", "security", "compliance"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Audit Events Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(audit_events_total[1h]))",
+            "legendFormat": "Total Events/Hour"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 1000},
+                {"color": "red", "value": 5000}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Security Events",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(audit_security_events_total[1h]))",
+            "legendFormat": "Security Events/Hour"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 10}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Compliance Violations",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(increase(audit_compliance_violations_total[1h]))",
+            "legendFormat": "Violations/Hour"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 3}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Failed Authentication Rate",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "rate(audit_authentication_failed_total[5m]) / rate(audit_authentication_total[5m]) * 100",
+            "legendFormat": "Failed Auth Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 5},
+                {"color": "red", "value": 10}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Audit Events Timeline",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(audit_events_total[5m])",
+            "legendFormat": "Events/sec"
+          },
+          {
+            "expr": "rate(audit_security_events_total[5m])",
+            "legendFormat": "Security Events/sec"
+          },
+          {
+            "expr": "rate(audit_compliance_violations_total[5m])",
+            "legendFormat": "Violations/sec"
+          }
+        ],
+        "gridPos": {"h": 9, "w": 24, "x": 0, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Top Active Users",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (user_id) (increase(audit_user_actions_total[1h])))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 17}
+      },
+      {
+        "id": 7,
+        "title": "Access by Resource Type",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (resource_type) (increase(audit_resource_access_total[1h]))",
+            "legendFormat": "{{resource_type}}"
+          }
+        ],
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 17}
+      },
+      {
+        "id": 8,
+        "title": "Geographical Access Distribution",
+        "type": "geomap",
+        "targets": [
+          {
+            "expr": "sum by (country) (increase(audit_geographic_access_total[1h]))"
+          }
+        ],
+        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 26}
+      },
+      {
+        "id": 9,
+        "title": "Compliance Score by Framework",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "audit_compliance_score",
+            "legendFormat": "{{framework}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 0.6},
+                {"color": "green", "value": 0.8}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 26}
+      },
+      {
+        "id": 10,
+        "title": "Recent Security Alerts",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{job=\"audit-logs\"} |= \"security_event\" | json | severity=\"high\" or severity=\"critical\""
+          }
+        ],
+        "gridPos": {"h": 9, "w": 24, "x": 0, "y": 35}
+      }
+    ],
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 30,
+    "version": 1
+  }
+}

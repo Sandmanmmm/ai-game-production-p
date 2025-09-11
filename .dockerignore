@@ -1,0 +1,200 @@
+# GameForge Production Docker Build - Ignore File
+# Exclude unnecessary files from Docker build context
+
+# Large model files and caches
+models/
+*.safetensors
+*.bin
+*.ckpt
+*.pth
+*.pt
+huggingface_cache/
+transformers_cache/
+.cache/
+models_cache/
+
+# Backup directories
+backup_local_changes/
+backup/
+backups/
+
+# Development files
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.vs/
+*.code-workspace
+
+# Python caches and environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.pytest_cache/
+htmlcov/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+*.log
+logs/
+log/
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE files
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Documentation
+docs/_build/
+*.md
+README*
+CHANGELOG*
+LICENSE*
+CONTRIBUTING*
+
+# Test files
+tests/
+test/
+*test*.py
+*spec*.py
+
+# Configuration files (keep essential ones)
+*.example
+*.sample
+.env.example
+.env.sample
+
+# Large datasets
+data/
+datasets/
+*.csv
+*.json
+*.xml
+*.parquet
+*.h5
+*.hdf5
+
+# Media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.aac
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.ico
+*.webp
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tbz2
+*.tar.xz
+*.txz
+*.7z
+*.rar
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
+
+# Security sensitive files
+*.key
+*.pem
+*.crt
+*.csr
+*.p12
+*.pfx
+secrets/
+.secrets/
+
+# Monitoring and logging
+monitoring/
+prometheus/
+grafana/
+
+# CI/CD artifacts
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+Jenkinsfile
+.circleci/
+
+# Docker files (keep only what we need)
+docker-compose*.yml
+!docker-compose.production.yml
+Dockerfile.*
+!Dockerfile.production.enhanced
+
+# Keep essential files for build
+!requirements*.txt
+!package.json
+!yarn.lock
+!package-lock.json
+!Pipfile
+!Pipfile.lock
+!pyproject.toml
+!setup.py
+!setup.cfg

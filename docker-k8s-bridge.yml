@@ -1,0 +1,120 @@
+# Docker-Kubernetes Integration Bridge
+# Maintains GameForge container compatibility across environments
+
+# Docker Compose Service Discovery to Kubernetes Services Mapping
+# ================================================================
+
+# Current Docker Compose services -> Kubernetes equivalents:
+# gameforge-app                  -> gameforge-app-prod (Deployment)
+# postgres                       -> gameforge-postgres-prod (StatefulSet)
+# redis                         -> gameforge-redis-prod (Deployment)
+# vault                         -> gameforge-vault-prod (StatefulSet)
+# grafana                       -> gameforge-grafana-prod (Deployment)
+# prometheus                    -> gameforge-prometheus-prod (Deployment)
+
+services:
+  # GameForge Application (Main Service)
+  gameforge-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.phase2-phase4
+      args:
+        VARIANT: ${GAMEFORGE_VARIANT:-gpu}
+    image: gameforge:phase2-phase4-production-${GAMEFORGE_VARIANT:-gpu}
+    container_name: gameforge-app-phase2-phase4-secure
+    hostname: gameforge-app
+    restart: unless-stopped
+    
+    # Environment variables that will map to Kubernetes ConfigMaps/Secrets
+    environment:
+      # Database connection (maps to k8s Secret)
+      DATABASE_URL: postgresql://gameforge:${POSTGRES_PASSWORD}@postgres:5432/gameforge_prod
+      
+      # Redis connection (maps to k8s ConfigMap)
+      REDIS_URL: redis://redis:6379/0
+      
+      # Vault integration (maps to k8s ConfigMap/Secret)
+      VAULT_ADDR: "http://vault:8200"
+      VAULT_NAMESPACE: "gameforge"
+      VAULT_TOKEN: ${VAULT_TOKEN}
+      
+      # GameForge specific configuration
+      GAMEFORGE_VARIANT: ${GAMEFORGE_VARIANT:-gpu}
+      GAMEFORGE_ENV: production
+      LOG_LEVEL: INFO
+      METRICS_ENABLED: "true"
+      
+      # Cloud provider integration
+      CLOUD_PROVIDER: ${CLOUD_PROVIDER:-local}
+      CLUSTER_NAME: ${CLUSTER_NAME:-local}
+      
+    # Volume mappings (will become PVCs in Kubernetes)
+    volumes:
+      - gameforge-logs:/app/logs:rw
+      - gameforge-models:/app/models:ro
+      - gameforge-cache:/app/cache:rw
+      
+    # Port mappings (will become Service ports)
+    ports:
+      - "8000:8000"  # HTTP API
+      - "9000:9000"  # Metrics endpoint
+      
+    # Health checks (will become k8s probes)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      
+    # Resource limits (will become k8s resources)
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+# Kubernetes Configuration Generation
+# ==================================
+
+# This compose file serves as the source of truth for:
+# 1. Container images and build configurations
+# 2. Environment variable mappings
+# 3. Volume and storage requirements
+# 4. Service discovery and networking
+# 5. Resource requirements and limits
+
+# Migration Strategy:
+# 1. Use this compose file to build and test locally
+# 2. Extract configurations to generate Kubernetes manifests
+# 3. Maintain compatibility through environment variable mapping
+# 4. Use the same container images in both environments
+
+volumes:
+  gameforge-logs:
+    driver: local
+    # In Kubernetes: PVC with ReadWriteMany for log aggregation
+    
+  gameforge-models:
+    driver: local
+    # In Kubernetes: PVC with ReadOnlyMany for model sharing
+    
+  gameforge-cache:
+    driver: local
+    # In Kubernetes: PVC with ReadWriteOnce for application cache
+
+networks:
+  gameforge-network:
+    driver: bridge
+    # In Kubernetes: NetworkPolicies for service isolation
+    
+  monitoring-network:
+    driver: bridge
+    # In Kubernetes: Separate namespace with network policies

@@ -1,0 +1,165 @@
+stages:
+  - security-analysis
+  - container-scan
+  - compliance-check
+  - security-gate
+  - deploy
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  DOCKER_DRIVER: overlay2
+
+# SAST (Static Application Security Testing)
+sast:
+  stage: security-analysis
+  image: returntocorp/semgrep:latest
+  script:
+    - semgrep --config=auto --json --output=sast-results.json .
+  artifacts:
+    reports:
+      sast: sast-results.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# Dependency Scanning
+dependency_scanning:
+  stage: security-analysis
+  image: node:18
+  before_script:
+    - npm install -g @cyclonedx/cyclonedx-npm audit-ci
+  script:
+    - npm audit --audit-level=moderate
+    - cyclonedx-npm --output-file=dependency-scan.json
+  artifacts:
+    reports:
+      dependency_scanning: dependency-scan.json
+    expire_in: 1 week
+
+# Container Scanning with Multiple Tools
+trivy_container_scan:
+  stage: container-scan
+  image: aquasec/trivy:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker build -t $IMAGE_TAG .
+  script:
+    - trivy image --format json --output trivy-report.json $IMAGE_TAG
+    - trivy image --exit-code 1 --severity CRITICAL,HIGH $IMAGE_TAG
+  artifacts:
+    reports:
+      container_scanning: trivy-report.json
+    expire_in: 1 week
+
+grype_container_scan:
+  stage: container-scan
+  image: anchore/grype:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $IMAGE_TAG .
+    - grype $IMAGE_TAG -o json --file grype-report.json
+    - grype $IMAGE_TAG --fail-on high
+  artifacts:
+    paths:
+      - grype-report.json
+    expire_in: 1 week
+
+# License Compliance Check
+license_scanning:
+  stage: compliance-check
+  image: licensefinder/license_finder:latest
+  script:
+    - license_finder --format json --save license-report.json
+  artifacts:
+    reports:
+      license_scanning: license-report.json
+    expire_in: 1 week
+
+# Infrastructure as Code Security
+iac_security:
+  stage: compliance-check
+  image: bridgecrew/checkov:latest
+  script:
+    - checkov -d . --framework dockerfile,docker_compose -o json --output-file checkov-report.json
+  artifacts:
+    paths:
+      - checkov-report.json
+    expire_in: 1 week
+
+# DAST (Dynamic Application Security Testing)
+dast:
+  stage: compliance-check
+  image: owasp/zap2docker-stable:latest
+  services:
+    - name: $IMAGE_TAG
+      alias: app
+  variables:
+    DAST_WEBSITE: http://app:8080
+  script:
+    - mkdir -p /zap/wrk
+    - zap-baseline.py -t $DAST_WEBSITE -J dast-report.json
+  artifacts:
+    reports:
+      dast: dast-report.json
+    expire_in: 1 week
+  allow_failure: true
+
+# Security Gate Validation
+security_gate:
+  stage: security-gate
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache jq
+  script:
+    - |
+      # Aggregate security results
+      CRITICAL_VULNS=0
+      HIGH_VULNS=0
+
+      # Check Trivy results
+      if [ -f trivy-report.json ]; then
+        TRIVY_CRITICAL=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-report.json)
+        TRIVY_HIGH=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity=="HIGH")] | length' trivy-report.json)
+        CRITICAL_VULNS=$((CRITICAL_VULNS + TRIVY_CRITICAL))
+        HIGH_VULNS=$((HIGH_VULNS + TRIVY_HIGH))
+      fi
+
+      # Security gate policy
+      echo "Security Assessment Results:"
+      echo "Critical Vulnerabilities: $CRITICAL_VULNS"
+      echo "High Vulnerabilities: $HIGH_VULNS"
+
+      if [ $CRITICAL_VULNS -gt 0 ]; then
+        echo "SECURITY GATE FAILED: Critical vulnerabilities found. Deployment blocked."
+        exit 1
+      fi
+
+      if [ $HIGH_VULNS -gt 10 ]; then
+        echo "SECURITY GATE FAILED: Too many high vulnerabilities. Manual review required."
+        exit 1
+      fi
+
+      echo "SECURITY GATE PASSED: Ready for deployment."
+  dependencies:
+    - trivy_container_scan
+    - grype_container_scan
+    - sast
+
+# Secure Deployment
+deploy_production:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying secure image to production..."
+    - echo "Image: $IMAGE_TAG"
+    # Add your deployment commands here
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  dependencies:
+    - security_gate
+  when: manual

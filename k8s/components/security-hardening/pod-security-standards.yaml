@@ -1,0 +1,30 @@
+# Pod Security Standards (replaces deprecated PodSecurityPolicy)
+# Security labels are applied via strategic merge patches instead of redefining namespaces
+---
+# Security Context Constraints for enhanced security
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-contexts
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: security-config
+data:
+  security-guidelines.yaml: |
+    # Security Context Guidelines for GameForge
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      fsGroup: 65534
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault

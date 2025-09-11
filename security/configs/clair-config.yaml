@@ -1,0 +1,48 @@
+clair:
+  database:
+    type: pgsql
+    options:
+      source: host=clair-postgres port=5432 user=clair password=clair_password dbname=clair sslmode=disable
+      max_open_conns: 100
+      max_idle_conns: 50
+      conn_max_lifetime: 30m
+
+  api:
+    addr: "0.0.0.0:6060"
+    timeout: 900s
+    cert_file: ""
+    key_file: ""
+    ca_file: ""
+
+  updater:
+    interval: 6h
+    enable_auto_merge: true
+
+  notifier:
+    attempts: 3
+    renotify_interval: 2h
+    http:
+      endpoint: http://webhook-service:8080/notifications
+      proxy: ""
+      cert_file: ""
+      key_file: ""
+      ca_file: ""
+      servername: ""
+
+  log_level: info
+
+  # Security scanners configuration
+  matchers:
+    - alpine-matcher
+    - aws-matcher
+    - debian-matcher
+    - rhel-matcher
+    - ubuntu-matcher
+    - oracle-matcher
+    - photon-matcher
+    - python-matcher
+    - java-matcher
+    - go-matcher
+    - javascript-matcher
+    - ruby-matcher
+    - rust-matcher

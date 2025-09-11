@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gameforge-security
+  labels:
+    name: gameforge-security
+    environment: production
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: security
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gameforge-monitoring
+  labels:
+    name: gameforge-monitoring
+    environment: production
+    app.kubernetes.io/name: gameforge-monitoring
+    app.kubernetes.io/component: observability

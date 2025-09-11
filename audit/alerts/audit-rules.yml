@@ -1,0 +1,172 @@
+groups:
+- name: audit_alerts
+  rules:
+  # High volume of audit events
+  - alert: HighAuditEventVolume
+    expr: rate(audit_events_total[5m]) > 100
+    for: 2m
+    labels:
+      severity: warning
+      category: audit
+    annotations:
+      summary: "High volume of audit events detected"
+      description: "Audit event rate is {{ $value }} events/sec, which is above the threshold of 100/sec"
+      runbook_url: "https://wiki.gameforge.com/runbooks/audit-high-volume"
+
+  # Security event detection
+  - alert: SecurityEventDetected
+    expr: increase(audit_security_events_total[5m]) > 0
+    for: 0m
+    labels:
+      severity: critical
+      category: security
+    annotations:
+      summary: "Security event detected in audit logs"
+      description: "{{ $value }} security events detected in the last 5 minutes"
+      runbook_url: "https://wiki.gameforge.com/runbooks/security-incident"
+
+  # Compliance violation alert
+  - alert: ComplianceViolationDetected
+    expr: increase(audit_compliance_violations_total[5m]) > 0
+    for: 0m
+    labels:
+      severity: high
+      category: compliance
+    annotations:
+      summary: "Compliance violation detected"
+      description: "{{ $value }} compliance violations detected in the last 5 minutes"
+      runbook_url: "https://wiki.gameforge.com/runbooks/compliance-violation"
+
+  # Failed authentication spike
+  - alert: HighFailedAuthenticationRate
+    expr: rate(audit_authentication_failed_total[5m]) / rate(audit_authentication_total[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      category: authentication
+    annotations:
+      summary: "High failed authentication rate detected"
+      description: "Failed authentication rate is {{ $value | humanizePercentage }}, above 10% threshold"
+      runbook_url: "https://wiki.gameforge.com/runbooks/failed-auth"
+
+  # Privileged user activity
+  - alert: PrivilegedUserActivity
+    expr: increase(audit_privileged_actions_total[10m]) > 5
+    for: 0m
+    labels:
+      severity: warning
+      category: privileged_access
+    annotations:
+      summary: "High privileged user activity detected"
+      description: "{{ $value }} privileged actions in the last 10 minutes"
+      runbook_url: "https://wiki.gameforge.com/runbooks/privileged-access"
+
+  # Data access anomaly
+  - alert: UnusualDataAccessPattern
+    expr: |
+      (
+        rate(audit_data_access_total[1h]) > 
+        avg_over_time(rate(audit_data_access_total[1h])[7d]) * 3
+      )
+    for: 5m
+    labels:
+      severity: warning
+      category: data_access
+    annotations:
+      summary: "Unusual data access pattern detected"
+      description: "Data access rate is 3x higher than the 7-day average"
+      runbook_url: "https://wiki.gameforge.com/runbooks/data-access-anomaly"
+
+  # Audit log ingestion failure
+  - alert: AuditLogIngestionFailure
+    expr: increase(audit_ingestion_errors_total[5m]) > 0
+    for: 1m
+    labels:
+      severity: critical
+      category: infrastructure
+    annotations:
+      summary: "Audit log ingestion failure"
+      description: "{{ $value }} audit log ingestion errors in the last 5 minutes"
+      runbook_url: "https://wiki.gameforge.com/runbooks/audit-ingestion-failure"
+
+  # Elasticsearch audit index issues
+  - alert: AuditIndexHealthIssue
+    expr: elasticsearch_cluster_health_status{cluster="audit"} != 0
+    for: 2m
+    labels:
+      severity: warning
+      category: infrastructure
+    annotations:
+      summary: "Audit Elasticsearch cluster health issue"
+      description: "Audit Elasticsearch cluster health is not green"
+      runbook_url: "https://wiki.gameforge.com/runbooks/elasticsearch-health"
+
+  # Kafka audit topic lag
+  - alert: AuditKafkaConsumerLag
+    expr: kafka_consumer_lag_max{topic="audit-events"} > 1000
+    for: 5m
+    labels:
+      severity: warning
+      category: infrastructure
+    annotations:
+      summary: "High Kafka consumer lag for audit events"
+      description: "Kafka consumer lag is {{ $value }} messages for audit-events topic"
+      runbook_url: "https://wiki.gameforge.com/runbooks/kafka-consumer-lag"
+
+  # Audit data retention compliance
+  - alert: AuditDataRetentionIssue
+    expr: |
+      (
+        time() - audit_oldest_record_timestamp > 
+        audit_retention_policy_seconds
+      )
+    for: 1h
+    labels:
+      severity: high
+      category: compliance
+    annotations:
+      summary: "Audit data retention policy violation"
+      description: "Audit data older than retention policy detected"
+      runbook_url: "https://wiki.gameforge.com/runbooks/data-retention"
+
+- name: audit_sla
+  rules:
+  # Audit system availability
+  - alert: AuditSystemUnavailable
+    expr: up{job="audit-system"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      category: availability
+    annotations:
+      summary: "Audit system is unavailable"
+      description: "Audit system has been down for more than 1 minute"
+      runbook_url: "https://wiki.gameforge.com/runbooks/audit-system-down"
+
+  # Audit processing latency
+  - alert: HighAuditProcessingLatency
+    expr: audit_processing_latency_seconds > 30
+    for: 5m
+    labels:
+      severity: warning
+      category: performance
+    annotations:
+      summary: "High audit processing latency"
+      description: "Audit processing latency is {{ $value }}s, above 30s threshold"
+      runbook_url: "https://wiki.gameforge.com/runbooks/audit-latency"
+
+  # Missing audit events
+  - alert: MissingAuditEvents
+    expr: |
+      (
+        rate(application_requests_total[5m]) > 0 and
+        rate(audit_events_total[5m]) == 0
+      )
+    for: 2m
+    labels:
+      severity: critical
+      category: data_integrity
+    annotations:
+      summary: "Missing audit events detected"
+      description: "Application is processing requests but no audit events are being generated"
+      runbook_url: "https://wiki.gameforge.com/runbooks/missing-audit-events"

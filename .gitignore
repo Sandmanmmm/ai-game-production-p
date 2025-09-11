@@ -25,6 +25,10 @@ dist-ssr
 *.sw?
 
 .env
+docker.env
+*.env
+!.env.example
+!.env.template
 **/agent-eval-report*
 packages
 pids
@@ -69,3 +73,21 @@ venv/
 .venv/
 env/
 .env/
+
+# Security-specific additions
+*.key
+*.pem
+*.p12
+.env
+.env.*
+!.env.example
+*_api_key*
+*_secret*
+*token*
+!*token*.py
+!*token*.js
+*.backup
+*.dump
+.vault-token
+secrets/
+credentials/

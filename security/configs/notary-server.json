@@ -1,0 +1,29 @@
+﻿{
+  "server": {
+    "http_addr": ":4443",
+    "tls_cert_file": "/etc/ssl/notary/notary-server.crt", 
+    "tls_key_file": "/etc/ssl/notary/notary-server.key"
+  },
+  "trust_service": {
+    "type": "local",
+    "hostname": "",
+    "port": "",
+    "key_algorithm": "ecdsa"
+  },
+  "logging": {
+    "level": "info"
+  },
+  "storage": {
+    "backend": "postgres",
+    "db_url": "postgres://\:\@postgres:5432/notary_server?sslmode=require"
+  },
+  "auth": {
+    "type": "token",
+    "options": {
+      "realm": "https://harbor-registry:8080/service/token",
+      "service": "harbor-notary",
+      "issuer": "harbor-token-issuer",
+      "rootcertbundle": "/etc/ssl/notary/root-ca.crt"
+    }
+  }
+}

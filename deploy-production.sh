@@ -120,6 +120,25 @@ else
     print_error "Nginx health check failed"
 fi
 
+# Initialize Elasticsearch log pipeline
+print_status "Initializing Elasticsearch log pipeline..."
+if [ -f "./monitoring/logging/elasticsearch-init.sh" ]; then
+    chmod +x ./monitoring/logging/elasticsearch-init.sh
+    docker exec gameforge-elasticsearch-secure /bin/bash -c "
+        export ELASTIC_PASSWORD='${ELASTIC_PASSWORD}'
+        export LOGSTASH_SYSTEM_PASSWORD='${LOGSTASH_SYSTEM_PASSWORD}'
+        export FILEBEAT_SYSTEM_PASSWORD='${FILEBEAT_SYSTEM_PASSWORD}'
+        ./monitoring/logging/elasticsearch-init.sh
+    "
+    if [ $? -eq 0 ]; then
+        print_success "Elasticsearch log pipeline initialized"
+    else
+        print_warning "Elasticsearch initialization completed with warnings"
+    fi
+else
+    print_warning "Elasticsearch initialization script not found"
+fi
+
 # Display service URLs
 echo
 print_success "🎉 GameForge AI Production Stack Deployed Successfully!"

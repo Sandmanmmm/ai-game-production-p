@@ -1,0 +1,22 @@
+﻿services:
+  authz:
+    url: http://security-policy-engine:8181
+
+bundles:
+  gameforge:
+    resource: /policies
+
+decision_logs:
+  console: true
+  reporting:
+    min_delay_seconds: 1
+    max_delay_seconds: 5
+
+status:
+  console: true
+  
+plugins:
+  envoy_ext_authz_grpc:
+    addr: :9191
+    query: data.envoy.authz.allow
+    enable_reflection: true

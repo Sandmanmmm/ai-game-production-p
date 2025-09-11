@@ -1,0 +1,94 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: gameforge-secret-rotation-staging
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    staging.gameforge.com/deployment-tier: "staging"
+
+# Base configuration
+bases:
+- ../../base
+
+# Staging namespace
+namespace: gameforge-staging
+
+# Staging-specific labels
+commonLabels:
+  environment: staging
+  tier: staging
+  
+# Staging annotations
+commonAnnotations:
+  deployment.kubernetes.io/environment: "staging"
+
+# Name suffix for staging
+nameSuffix: -staging
+
+# Staging image tags
+images:
+- name: gameforge/secret-rotation
+  newTag: v1.0.0-staging
+- name: gameforge/security-monitor
+  newTag: v1.0.0-staging
+
+# Staging replica counts (reduced for cost)
+replicas:
+- name: prometheus
+  count: 1
+- name: grafana
+  count: 1
+
+# Staging configuration
+configMapGenerator:
+- name: staging-config
+  literals:
+  - environment=staging
+  - log_level=DEBUG
+  - enable_debug=true
+  - vault_max_retries=3
+  - rotation_timeout=1800
+  - monitoring_interval=60
+  options:
+    disableNameSuffixHash: false
+
+# Staging patches
+patchesJson6902:
+# Reduce resources for staging
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: 512Mi
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 1Gi
+
+# Staging CronJob - more frequent for testing
+- target:
+    group: batch
+    version: v1
+    kind: CronJob
+    name: secret-rotation-internal
+    namespace: gameforge-security
+  patch: |-
+    - op: replace
+      path: /spec/schedule
+      value: "*/30 * * * *"  # Every 30 minutes for testing
+
+# Staging PVC - smaller storage
+- target:
+    group: v1
+    kind: PersistentVolumeClaim
+    name: prometheus-storage
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: 10Gi

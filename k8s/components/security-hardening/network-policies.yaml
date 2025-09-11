@@ -1,0 +1,67 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gameforge-security-network-policy
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge-security
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: gameforge-secret-rotation
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: gameforge-monitoring
+    ports:
+    - protocol: TCP
+      port: 8080  # Health check port
+  egress:
+  - to: []  # Allow all egress (for Vault access)
+    ports:
+    - protocol: TCP
+      port: 8200  # Vault
+    - protocol: TCP
+      port: 443   # HTTPS
+    - protocol: TCP
+      port: 53    # DNS
+    - protocol: UDP
+      port: 53    # DNS
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gameforge-monitoring-network-policy
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge-monitoring
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: gameforge-security
+  - from: []  # Allow scraping from anywhere within cluster
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus
+    - protocol: TCP
+      port: 3000  # Grafana
+    - protocol: TCP
+      port: 9093  # AlertManager
+    - protocol: TCP
+      port: 9100  # Node Exporter
+    - protocol: TCP
+      port: 9101  # Security Monitor
+  egress:
+  - to: []  # Allow all egress for scraping
