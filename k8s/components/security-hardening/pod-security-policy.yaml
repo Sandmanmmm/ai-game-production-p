@@ -1,0 +1,98 @@
+# Pod Security Standards (replaces deprecated PodSecurityPolicy)
+# Apply security labels to namespaces instead
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gameforge-security
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gameforge-monitoring
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+# Security Context Constraints for enhanced security
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-contexts
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: security-config
+data:
+  security-guidelines.yaml: |
+    # Security Context Guidelines for GameForge
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      fsGroup: 65534
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false  # Some containers need write access
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gameforge-psp-user
+  labels:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: security-policy
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs: ['use']
+  resourceNames:
+  - gameforge-restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gameforge-psp-binding
+  labels:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: security-policy
+roleRef:
+  kind: ClusterRole
+  name: gameforge-psp-user
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: secret-rotation-sa
+  namespace: gameforge-security
+- kind: ServiceAccount
+  name: monitoring-sa
+  namespace: gameforge-monitoring

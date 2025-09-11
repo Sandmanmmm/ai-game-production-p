@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: secret-rotation-config
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: config
+data:
+  rotation-config.yml: |
+    # GameForge Enterprise Secret Rotation Configuration
+    version: "2.0"
+    enterprise:
+      enabled: true
+      environment: "production"
+      
+    # Vault Configuration
+    vault:
+      address: "${VAULT_ADDR}"
+      auth_method: "token"
+      token_path: "/vault/secrets/token"
+      engine: "secret"
+      mount_path: "secret/"
+      
+    # Secret Types and Rotation Frequencies
+    secret_types:
+      root:
+        frequency_days: 90
+        auto_rotate: false
+        requires_approval: true
+        backup_enabled: true
+        notification_channels: ["slack", "email"]
+        
+      application:
+        frequency_days: 45
+        auto_rotate: true
+        requires_approval: false
+        backup_enabled: true
+        notification_channels: ["slack"]
+        
+      tls:
+        frequency_days: 60
+        auto_rotate: true
+        requires_approval: false
+        backup_enabled: true
+        notification_channels: ["slack"]
+        
+      internal:
+        frequency_days: 1
+        auto_rotate: true
+        requires_approval: false
+        backup_enabled: false
+        notification_channels: []
+        
+      database:
+        frequency_days: 90
+        auto_rotate: false
+        requires_approval: true
+        backup_enabled: true
+        notification_channels: ["slack", "email", "pagerduty"]
+        
+    # Monitoring Configuration
+    monitoring:
+      enabled: true
+      metrics_port: 9091
+      health_check_port: 8080
+      prometheus_scrape: true
+      
+    # Audit and Logging
+    audit:
+      enabled: true
+      log_level: "INFO"
+      log_format: "json"
+      retention_days: 365
+      
+    # Notification Configuration
+    notifications:
+      slack:
+        webhook_url: "${SLACK_WEBHOOK_URL}"
+        channel: "#security-alerts"
+        
+      email:
+        smtp_server: "smtp.gameforge.com"
+        smtp_port: 587
+        from_address: "vault-alerts@gameforge.com"
+        
+      pagerduty:
+        integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+        
+    # Backup Configuration
+    backup:
+      enabled: true
+      storage_type: "kubernetes"
+      retention_count: 10
+      encryption_enabled: true

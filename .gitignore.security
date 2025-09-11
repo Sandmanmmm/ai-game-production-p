@@ -1,0 +1,67 @@
+# Security-specific gitignore additions
+
+# Secrets and credentials
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+.env
+.env.*
+!.env.example
+!.env.template
+.vault-token
+vault-keys.json
+secrets/
+credentials/
+
+# API Keys and tokens
+*_api_key*
+*_secret*
+*token*
+!*token*.py
+!*token*.js
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database.yml
+database.json
+
+# Backups that might contain sensitive data
+*.backup
+*.bak
+*.dump
+*.sql
+
+# SBOM files (can be regenerated)
+sbom/*.json
+!sbom/.gitkeep
+
+# Build artifacts with embedded secrets
+build-info.json
+*.tar.gz
+*.zip
+
+# IDE and tool configurations that might have secrets
+.vscode/settings.json
+.idea/
+*.iml
+
+# Terraform state (contains secrets)
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Kubernetes secrets
+*secret*.yaml
+*secret*.yml
+!*secret*.template.yaml
+
+# Phase 1 artifacts
+requirements.locked.txt
+.secrets.baseline
+pre-commit-*

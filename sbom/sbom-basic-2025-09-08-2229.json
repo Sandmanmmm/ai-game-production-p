@@ -1,0 +1,601 @@
+﻿{
+    "python_packages":  [
+                            {
+                                "version":  "unknown",
+                                "name":  "pip\u003e=23.0.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "setuptools\u003e=65.0.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "wheel\u003e=0.38.0"
+                            },
+                            {
+                                "version":  "0.104.1",
+                                "name":  "fastapi"
+                            },
+                            {
+                                "version":  "0.24.0",
+                                "name":  "uvicorn[standard]"
+                            },
+                            {
+                                "version":  "2.5.0",
+                                "name":  "pydantic"
+                            },
+                            {
+                                "version":  "23.2.1",
+                                "name":  "aiofiles"
+                            },
+                            {
+                                "version":  "0.0.6",
+                                "name":  "python-multipart"
+                            },
+                            {
+                                "version":  "0.27.0",
+                                "name":  "starlette"
+                            },
+                            {
+                                "version":  "10.1.0",
+                                "name":  "pillow"
+                            },
+                            {
+                                "version":  "4.8.1.78",
+                                "name":  "opencv-python"
+                            },
+                            {
+                                "version":  "1.24.3",
+                                "name":  "numpy"
+                            },
+                            {
+                                "version":  "1.11.4",
+                                "name":  "scipy"
+                            },
+                            {
+                                "version":  "0.22.0",
+                                "name":  "scikit-image"
+                            },
+                            {
+                                "version":  "0.4.0",
+                                "name":  "safetensors"
+                            },
+                            {
+                                "version":  "0.19.4",
+                                "name":  "huggingface-hub"
+                            },
+                            {
+                                "version":  "2.14.6",
+                                "name":  "datasets"
+                            },
+                            {
+                                "version":  "5.0.1",
+                                "name":  "redis"
+                            },
+                            {
+                                "version":  "5.3.4",
+                                "name":  "celery"
+                            },
+                            {
+                                "version":  "5.3.4",
+                                "name":  "kombu"
+                            },
+                            {
+                                "version":  "2.31.0",
+                                "name":  "requests"
+                            },
+                            {
+                                "version":  "0.25.2",
+                                "name":  "httpx"
+                            },
+                            {
+                                "version":  "4.66.1",
+                                "name":  "tqdm"
+                            },
+                            {
+                                "version":  "5.9.6",
+                                "name":  "psutil"
+                            },
+                            {
+                                "version":  "1.4.0",
+                                "name":  "GPUtil"
+                            },
+                            {
+                                "version":  "0.19.0",
+                                "name":  "prometheus-client"
+                            },
+                            {
+                                "version":  "23.2.0",
+                                "name":  "structlog"
+                            },
+                            {
+                                "version":  "41.0.7",
+                                "name":  "cryptography"
+                            },
+                            {
+                                "version":  "2.8.0",
+                                "name":  "PyJWT"
+                            },
+                            {
+                                "version":  "1.7.4",
+                                "name":  "passlib"
+                            },
+                            {
+                                "version":  "4.1.2",
+                                "name":  "bcrypt"
+                            },
+                            {
+                                "version":  "1.0.0",
+                                "name":  "python-dotenv"
+                            },
+                            {
+                                "version":  "6.0.1",
+                                "name":  "pyyaml"
+                            },
+                            {
+                                "version":  "0.10.2",
+                                "name":  "toml"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "fastapi\u003e=0.104.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "uvicorn[standard]\u003e=0.24.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "pydantic\u003e=2.5.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "python-multipart\u003e=0.0.6"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "httpx\u003e=0.25.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "requests\u003e=2.31.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "aiofiles\u003e=23.2.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "starlette\u003e=0.27.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "torch\u003e=2.1.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "torchvision\u003e=0.16.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "diffusers\u003e=0.24.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "transformers\u003e=4.36.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "accelerate\u003e=0.25.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "xformers\u003e=0.0.22"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "safetensors\u003e=0.4.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "huggingface-hub\u003e=0.19.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "Pillow\u003e=10.1.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "numpy\u003e=1.24.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "psycopg2-binary\u003e=2.9.7"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "asyncpg\u003e=0.29.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "redis\u003e=5.0.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "sqlalchemy\u003e=2.0.23"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "alembic\u003e=1.12.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "python-jose[cryptography]\u003e=3.3.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "passlib[bcrypt]\u003e=1.7.4"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "bcrypt\u003e=4.0.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "cryptography\u003e=41.0.7"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "python-multipart\u003e=0.0.6"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "prometheus-client\u003e=0.19.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "structlog\u003e=23.2.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "python-json-logger\u003e=2.0.7"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "sentry-sdk\u003e=1.38.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "pytest\u003e=7.4.3"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "pytest-asyncio\u003e=0.21.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "httpx\u003e=0.25.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "black\u003e=23.11.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "flake8\u003e=6.1.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "mypy\u003e=1.7.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "python-dotenv\u003e=1.0.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "click\u003e=8.1.7"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "rich\u003e=13.7.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "tqdm\u003e=4.66.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "psutil\u003e=5.9.6"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "typing-extensions\u003e=4.8.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "pyyaml\u003e=6.0.1"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "email-validator\u003e=2.1.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "gunicorn\u003e=21.2.0"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "docker\u003e=6.1.3"
+                            },
+                            {
+                                "version":  "unknown",
+                                "name":  "kubernetes\u003e=28.1.0"
+                            }
+                        ],
+    "scan_type":  "basic",
+    "timestamp":  "2025-09-08T22:29:37.8809037-04:00",
+    "node_packages":  [
+                          {
+                              "version":  "^0.39.0",
+                              "name":  "@github/spark"
+                          },
+                          {
+                              "version":  "^2.2.0",
+                              "name":  "@heroicons/react"
+                          },
+                          {
+                              "version":  "^4.1.3",
+                              "name":  "@hookform/resolvers"
+                          },
+                          {
+                              "version":  "^6.1.4",
+                              "name":  "@octokit/core"
+                          },
+                          {
+                              "version":  "^2.1.7",
+                              "name":  "@phosphor-icons/react"
+                          },
+                          {
+                              "version":  "^3.0.0",
+                              "name":  "@radix-ui/colors"
+                          },
+                          {
+                              "version":  "^1.2.3",
+                              "name":  "@radix-ui/react-accordion"
+                          },
+                          {
+                              "version":  "^1.1.6",
+                              "name":  "@radix-ui/react-alert-dialog"
+                          },
+                          {
+                              "version":  "^1.1.2",
+                              "name":  "@radix-ui/react-aspect-ratio"
+                          },
+                          {
+                              "version":  "^1.1.3",
+                              "name":  "@radix-ui/react-avatar"
+                          },
+                          {
+                              "version":  "^1.1.4",
+                              "name":  "@radix-ui/react-checkbox"
+                          },
+                          {
+                              "version":  "^1.1.3",
+                              "name":  "@radix-ui/react-collapsible"
+                          },
+                          {
+                              "version":  "^2.2.6",
+                              "name":  "@radix-ui/react-context-menu"
+                          },
+                          {
+                              "version":  "^1.1.6",
+                              "name":  "@radix-ui/react-dialog"
+                          },
+                          {
+                              "version":  "^2.1.6",
+                              "name":  "@radix-ui/react-dropdown-menu"
+                          },
+                          {
+                              "version":  "^1.1.6",
+                              "name":  "@radix-ui/react-hover-card"
+                          },
+                          {
+                              "version":  "^2.1.2",
+                              "name":  "@radix-ui/react-label"
+                          },
+                          {
+                              "version":  "^1.1.6",
+                              "name":  "@radix-ui/react-menubar"
+                          },
+                          {
+                              "version":  "^1.2.5",
+                              "name":  "@radix-ui/react-navigation-menu"
+                          },
+                          {
+                              "version":  "^1.1.6",
+                              "name":  "@radix-ui/react-popover"
+                          },
+                          {
+                              "version":  "^1.1.2",
+                              "name":  "@radix-ui/react-progress"
+                          },
+                          {
+                              "version":  "^1.2.3",
+                              "name":  "@radix-ui/react-radio-group"
+                          },
+                          {
+                              "version":  "^1.2.9",
+                              "name":  "@radix-ui/react-scroll-area"
+                          },
+                          {
+                              "version":  "^2.1.6",
+                              "name":  "@radix-ui/react-select"
+                          },
+                          {
+                              "version":  "^1.1.2",
+                              "name":  "@radix-ui/react-separator"
+                          },
+                          {
+                              "version":  "^1.2.3",
+                              "name":  "@radix-ui/react-slider"
+                          },
+                          {
+                              "version":  "^1.1.2",
+                              "name":  "@radix-ui/react-slot"
+                          },
+                          {
+                              "version":  "^1.1.3",
+                              "name":  "@radix-ui/react-switch"
+                          },
+                          {
+                              "version":  "^1.1.3",
+                              "name":  "@radix-ui/react-tabs"
+                          },
+                          {
+                              "version":  "^1.1.2",
+                              "name":  "@radix-ui/react-toggle"
+                          },
+                          {
+                              "version":  "^1.1.2",
+                              "name":  "@radix-ui/react-toggle-group"
+                          },
+                          {
+                              "version":  "^1.1.8",
+                              "name":  "@radix-ui/react-tooltip"
+                          },
+                          {
+                              "version":  "^0.1.1",
+                              "name":  "@tailwindcss/container-queries"
+                          },
+                          {
+                              "version":  "^4.1.11",
+                              "name":  "@tailwindcss/vite"
+                          },
+                          {
+                              "version":  "^5.83.1",
+                              "name":  "@tanstack/react-query"
+                          },
+                          {
+                              "version":  "^2.2.1",
+                              "name":  "@types/form-data"
+                          },
+                          {
+                              "version":  "^1.11.0",
+                              "name":  "axios"
+                          },
+                          {
+                              "version":  "^0.7.1",
+                              "name":  "class-variance-authority"
+                          },
+                          {
+                              "version":  "^2.1.1",
+                              "name":  "clsx"
+                          },
+                          {
+                              "version":  "^1.1.1",
+                              "name":  "cmdk"
+                          },
+                          {
+                              "version":  "^7.9.0",
+                              "name":  "d3"
+                          },
+                          {
+                              "version":  "^3.6.0",
+                              "name":  "date-fns"
+                          },
+                          {
+                              "version":  "^8.5.2",
+                              "name":  "embla-carousel-react"
+                          },
+                          {
+                              "version":  "^4.0.4",
+                              "name":  "form-data"
+                          },
+                          {
+                              "version":  "^12.6.2",
+                              "name":  "framer-motion"
+                          },
+                          {
+                              "version":  "^1.4.2",
+                              "name":  "input-otp"
+                          },
+                          {
+                              "version":  "^0.484.0",
+                              "name":  "lucide-react"
+                          },
+                          {
+                              "version":  "^15.0.7",
+                              "name":  "marked"
+                          },
+                          {
+                              "version":  "^0.4.6",
+                              "name":  "next-themes"
+                          },
+                          {
+                              "version":  "^4.1.2",
+                              "name":  "octokit"
+                          },
+                          {
+                              "version":  "^19.0.0",
+                              "name":  "react"
+                          },
+                          {
+                              "version":  "^9.6.7",
+                              "name":  "react-day-picker"
+                          },
+                          {
+                              "version":  "^19.0.0",
+                              "name":  "react-dom"
+                          },
+                          {
+                              "version":  "^6.0.0",
+                              "name":  "react-error-boundary"
+                          },
+                          {
+                              "version":  "^7.54.2",
+                              "name":  "react-hook-form"
+                          },
+                          {
+                              "version":  "^2.1.7",
+                              "name":  "react-resizable-panels"
+                          },
+                          {
+                              "version":  "^7.8.2",
+                              "name":  "react-router-dom"
+                          },
+                          {
+                              "version":  "^2.15.1",
+                              "name":  "recharts"
+                          },
+                          {
+                              "version":  "^2.0.1",
+                              "name":  "sonner"
+                          },
+                          {
+                              "version":  "^3.0.2",
+                              "name":  "tailwind-merge"
+                          },
+                          {
+                              "version":  "^0.175.0",
+                              "name":  "three"
+                          },
+                          {
+                              "version":  "^1.2.4",
+                              "name":  "tw-animate-css"
+                          },
+                          {
+                              "version":  "^11.1.0",
+                              "name":  "uuid"
+                          },
+                          {
+                              "version":  "^1.1.2",
+                              "name":  "vaul"
+                          },
+                          {
+                              "version":  "^3.25.76",
+                              "name":  "zod"
+                          }
+                      ],
+    "repository":  "ai-game-production-p"
+}

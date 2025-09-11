@@ -1,0 +1,22 @@
+﻿# GameForge Basic Inventory - 20250909-164436
+# Generated: 09/09/2025 16:45:22
+
+## Project Structure
+Root: C:\Users\ya754\GameForge\ai-game-production-p
+Files: 104691
+Python files: 15885
+JS/TS files: 39672
+
+## Dependency Files Found
+requirements.txt
+package-lock.json
+backend\package-lock.json
+
+## Docker Files Found
+Dockerfile
+Dockerfile.frontend
+Dockerfile.minimal
+Dockerfile.production
+Dockerfile.production.enhanced
+
+## Key Configuration Files

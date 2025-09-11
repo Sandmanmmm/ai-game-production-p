@@ -1,3 +1,7 @@
+﻿# Reproducible build arguments
+ARG BUILD_DATE
+ARG VCS_REF  
+ARG BUILD_VERSION
 # Production Dockerfile for GameForge Frontend
 FROM node:18-alpine AS base
 
@@ -45,3 +49,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
+

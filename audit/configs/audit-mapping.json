@@ -1,0 +1,130 @@
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1,
+    "index.refresh_interval": "5s",
+    "index.max_result_window": 50000,
+    "analysis": {
+      "analyzer": {
+        "audit_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "stop"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "timestamp": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "level": {
+        "type": "keyword"
+      },
+      "service": {
+        "type": "keyword"
+      },
+      "user_id": {
+        "type": "keyword"
+      },
+      "session_id": {
+        "type": "keyword"
+      },
+      "action": {
+        "type": "keyword"
+      },
+      "resource": {
+        "type": "keyword"
+      },
+      "ip_address": {
+        "type": "ip"
+      },
+      "user_agent": {
+        "type": "text",
+        "analyzer": "audit_analyzer"
+      },
+      "message": {
+        "type": "text",
+        "analyzer": "audit_analyzer"
+      },
+      "audit_version": {
+        "type": "keyword"
+      },
+      "environment": {
+        "type": "keyword"
+      },
+      "service_name": {
+        "type": "keyword"
+      },
+      "datacenter": {
+        "type": "keyword"
+      },
+      "compliance_required": {
+        "type": "boolean"
+      },
+      "compliance_violation": {
+        "type": "boolean"
+      },
+      "security_event": {
+        "type": "boolean"
+      },
+      "priority": {
+        "type": "keyword"
+      },
+      "severity": {
+        "type": "keyword"
+      },
+      "hostname": {
+        "type": "keyword"
+      },
+      "host_ip": {
+        "type": "ip"
+      },
+      "audit_collector": {
+        "type": "keyword"
+      },
+      "event_type": {
+        "type": "keyword"
+      },
+      "success": {
+        "type": "boolean"
+      },
+      "error_code": {
+        "type": "keyword"
+      },
+      "duration_ms": {
+        "type": "long"
+      },
+      "request_id": {
+        "type": "keyword"
+      },
+      "trace_id": {
+        "type": "keyword"
+      },
+      "span_id": {
+        "type": "keyword"
+      },
+      "parent_span_id": {
+        "type": "keyword"
+      },
+      "tags": {
+        "type": "object"
+      },
+      "compliance_framework": {
+        "type": "keyword"
+      },
+      "data_classification": {
+        "type": "keyword"
+      },
+      "retention_policy": {
+        "type": "keyword"
+      }
+    }
+  }
+}

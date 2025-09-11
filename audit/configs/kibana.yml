@@ -1,0 +1,36 @@
+# Kibana Configuration for Audit Logs
+# File: audit/configs/kibana.yml
+
+server.name: kibana-audit
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://elasticsearch-audit:9200"]
+elasticsearch.username: "elastic"
+elasticsearch.password: "audit_secure_password_2024"
+
+# Enable audit logging in Kibana
+xpack.security.audit.enabled: true
+xpack.security.audit.appender.type: "rolling-file"
+xpack.security.audit.appender.fileName: "/usr/share/kibana/logs/kibana-audit.log"
+xpack.security.audit.appender.policy.type: "time-size"
+xpack.security.audit.appender.policy.interval: "24h"
+xpack.security.audit.appender.policy.size: "100mb"
+xpack.security.audit.appender.policy.maxFiles: 30
+
+# Custom index patterns for audit data
+kibana.index: ".kibana-audit"
+
+# Security settings
+xpack.security.encryptionKey: "audit_encryption_key_32_chars_long_123"
+xpack.encryptedSavedObjects.encryptionKey: "audit_saved_objects_key_32_chars_456"
+
+# Monitoring and alerting
+xpack.monitoring.enabled: true
+xpack.monitoring.collection.enabled: true
+
+# Disable telemetry for security
+telemetry.enabled: false
+telemetry.optIn: false
+
+# Session configuration
+xpack.security.session.idleTimeout: "8h"
+xpack.security.session.lifespan: "24h"

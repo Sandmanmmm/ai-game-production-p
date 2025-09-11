@@ -1,0 +1,210 @@
+# GameForge Application Deployment for Cloud Migration
+# Maintains compatibility with Docker Compose setup
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameforge-app-prod
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: application
+    app.kubernetes.io/version: "v1.0.0"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gameforge
+      app.kubernetes.io/component: application
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gameforge
+        app.kubernetes.io/component: application
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: gameforge-app-sa-prod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+      - name: gameforge-app
+        # This will be updated during migration to cloud registry
+        image: gameforge:phase2-phase4-production-gpu
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 9000
+          name: metrics
+          protocol: TCP
+        env:
+        # Database configuration (same as Docker Compose)
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: gameforge-database-secrets-prod
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: gameforge-config-prod
+              key: REDIS_URL
+        # GameForge specific environment variables
+        - name: GAMEFORGE_VARIANT
+          value: "gpu"
+        - name: GAMEFORGE_ENV
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: METRICS_ENABLED
+          value: "true"
+        # Vault integration (same as Docker setup)
+        - name: VAULT_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: gameforge-config-prod
+              key: VAULT_ADDR
+        - name: VAULT_NAMESPACE
+          value: "gameforge"
+        # Cloud provider specific
+        - name: CLOUD_PROVIDER
+          valueFrom:
+            configMapKeyRef:
+              name: aws-config-prod
+              key: CLOUD_PROVIDER
+              optional: true
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+            nvidia.com/gpu: 1
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: gameforge-logs
+          mountPath: /app/logs
+        - name: gameforge-models
+          mountPath: /app/models
+          readOnly: true
+        - name: gameforge-config
+          mountPath: /app/config
+          readOnly: true
+        # Security context (matching Docker setup)
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - CHOWN
+            - SETUID
+            - SETGID
+      # Node affinity for GPU nodes
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values: ["compute", "gpu"]
+              - key: accelerator
+                operator: In
+                values: ["nvidia-tesla", "nvidia-rtx"]
+                optional: true
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      volumes:
+      - name: gameforge-logs
+        persistentVolumeClaim:
+          claimName: gameforge-logs-storage-prod
+      - name: gameforge-models
+        persistentVolumeClaim:
+          claimName: gameforge-models-storage-prod
+      - name: gameforge-config
+        configMap:
+          name: gameforge-app-config-prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameforge-app-prod
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: application
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: application
+  ports:
+  - name: http
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9000
+    targetPort: 9000
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameforge-app-external-prod
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: application-external
+  annotations:
+    # Will be updated for cloud provider
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+    external-dns.alpha.kubernetes.io/hostname: "api.gameforge.com"
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: gameforge
+    app.kubernetes.io/component: application
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8000
+    protocol: TCP
+  - name: http
+    port: 80
+    targetPort: 8000
+    protocol: TCP

@@ -1,0 +1,92 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+metadata:
+  name: high-availability
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    component.gameforge.com/type: "high-availability"
+
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+metadata:
+  name: high-availability
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    component.gameforge.com/type: "high-availability"
+
+# High availability patches - updated from deprecated patchesJson6902
+patches:
+# Prometheus HA configuration
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 3
+    - op: add
+      path: /spec/template/spec/affinity
+      value:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - gameforge-prometheus
+            topologyKey: kubernetes.io/hostname
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --web.enable-admin-api
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --storage.tsdb.min-block-duration=2h
+    - op: add
+      path: /spec/template/spec/containers/0/args/-
+      value: --storage.tsdb.max-block-duration=2h
+
+# Grafana with readiness probes
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-grafana
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/readinessProbe/periodSeconds
+      value: 5
+    - op: add
+      path: /spec/template/spec/containers/0/livenessProbe/periodSeconds
+      value: 30
+
+# DaemonSet with rolling update strategy
+- target:
+    group: apps
+    version: v1
+    kind: DaemonSet
+    name: gameforge-security-monitor
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/updateStrategy
+      value:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+
+resources:
+- pdb.yaml
+
+configMapGenerator:
+- name: ha-config
+  literals:
+  - ha.enabled=true
+  - ha.min_replicas=2
+  - ha.max_unavailable=1

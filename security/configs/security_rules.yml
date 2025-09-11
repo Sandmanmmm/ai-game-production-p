@@ -1,0 +1,84 @@
+groups:
+- name: security_alerts
+  rules:
+  - alert: CriticalVulnerabilityDetected
+    expr: vulnerability_scanner_critical_count > 0
+    for: 0m
+    labels:
+      severity: critical
+      team: security
+    annotations:
+      summary: "Critical vulnerability detected in {{ $labels.image }}"
+      description: "Image {{ $labels.image }} has {{ $value }} critical vulnerabilities"
+
+  - alert: HighVulnerabilityThresholdExceeded
+    expr: vulnerability_scanner_high_count > 10
+    for: 5m
+    labels:
+      severity: warning
+      team: security
+    annotations:
+      summary: "High vulnerability threshold exceeded"
+      description: "Image {{ $labels.image }} has {{ $value }} high vulnerabilities (threshold: 10)"
+
+  - alert: SecurityScanFailed
+    expr: up{job="trivy-exporter"} == 0
+    for: 2m
+    labels:
+      severity: warning
+      team: devops
+    annotations:
+      summary: "Security scanner is down"
+      description: "Trivy security scanner has been down for more than 2 minutes"
+
+  - alert: UnauthorizedImageDeployment
+    expr: increase(kubernetes_admission_controller_denies_total[5m]) > 0
+    for: 0m
+    labels:
+      severity: high
+      team: security
+    annotations:
+      summary: "Unauthorized image deployment attempt"
+      description: "{{ $value }} unauthorized deployment attempts in the last 5 minutes"
+
+  - alert: VulnerabilityDatabaseOutdated
+    expr: (time() - vulnerability_database_last_update) > 86400
+    for: 0m
+    labels:
+      severity: warning
+      team: security
+    annotations:
+      summary: "Vulnerability database is outdated"
+      description: "Vulnerability database has not been updated for more than 24 hours"
+
+  - alert: SecurityPolicyViolation
+    expr: increase(security_policy_violations_total[10m]) > 0
+    for: 0m
+    labels:
+      severity: high
+      team: security
+    annotations:
+      summary: "Security policy violation detected"
+      description: "{{ $value }} security policy violations in the last 10 minutes"
+
+- name: compliance_alerts
+  rules:
+  - alert: ComplianceViolation
+    expr: compliance_check_failed == 1
+    for: 0m
+    labels:
+      severity: critical
+      team: compliance
+    annotations:
+      summary: "Compliance check failed for {{ $labels.policy }}"
+      description: "Compliance check for policy {{ $labels.policy }} has failed"
+
+  - alert: LicenseViolation
+    expr: license_violation_detected == 1
+    for: 0m
+    labels:
+      severity: warning
+      team: legal
+    annotations:
+      summary: "License violation detected"
+      description: "Prohibited license {{ $labels.license }} detected in {{ $labels.component }}"

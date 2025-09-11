@@ -1,0 +1,111 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+metadata:
+  name: security-hardening
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    component.gameforge.com/type: "security-hardening"
+
+resources:
+- network-policies.yaml
+- pod-security-standards.yaml
+
+# Strategic merge patches for namespace security labels
+patchesStrategicMerge:
+- namespace-security-patches.yaml
+
+# Security hardening patches - updated from deprecated patchesJson6902
+patches:
+# Apply security context to all pods
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/securityContext
+      value:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+    - op: add
+      path: /spec/template/spec/containers/0/securityContext
+      value:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+          - ALL
+
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gameforge-grafana
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/securityContext/seccompProfile
+      value:
+        type: RuntimeDefault
+    - op: add
+      path: /spec/template/spec/containers/0/securityContext
+      value:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+
+- target:
+    group: apps
+    version: v1
+    kind: DaemonSet
+    name: gameforge-security-monitor
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: add
+      path: /spec/template/spec/securityContext/seccompProfile
+      value:
+        type: RuntimeDefault
+    - op: add
+      path: /spec/template/spec/containers/1/securityContext
+      value:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+          - ALL
+
+# Apply security context to CronJobs
+- target:
+    group: batch
+    version: v1
+    kind: CronJob
+    name: secret-rotation-internal
+    namespace: gameforge-security
+  patch: |-
+    - op: add
+      path: /spec/jobTemplate/spec/template/spec/securityContext/seccompProfile
+      value:
+        type: RuntimeDefault
+    - op: add
+      path: /spec/jobTemplate/spec/template/spec/containers/0/securityContext
+      value:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+          - ALL
+
+configMapGenerator:
+- name: security-config
+  literals:
+  - security.hardening.enabled=true
+  - security.pod.seccomp=RuntimeDefault
+  - security.network.policies=enabled

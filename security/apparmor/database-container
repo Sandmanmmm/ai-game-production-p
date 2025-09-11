@@ -1,0 +1,101 @@
+#include <tunables/global>
+
+# Database Container AppArmor Profile
+# Restrictive profile for PostgreSQL/Redis containers
+profile database-container flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  # Capabilities for database operations
+  capability chown,
+  capability setuid,
+  capability setgid,
+  capability fowner,
+  capability dac_override,
+
+  # Deny dangerous capabilities
+  deny capability sys_admin,
+  deny capability sys_module,
+  deny capability sys_rawio,
+  deny capability sys_boot,
+  deny capability sys_ptrace,
+  deny capability mac_admin,
+
+  # Network access
+  network tcp,
+  network udp,
+  network unix,
+
+  # Database binaries
+  /usr/bin/postgres ix,
+  /usr/lib/postgresql/*/bin/* ix,
+  /usr/bin/redis-server ix,
+  /usr/bin/redis-cli ix,
+
+  # Database data directories
+  /var/lib/postgresql/ rw,
+  /var/lib/postgresql/** rw,
+  /var/lib/redis/ rw,
+  /var/lib/redis/** rw,
+  /data/ rw,
+  /data/** rw,
+
+  # Configuration files
+  /etc/postgresql/ r,
+  /etc/postgresql/** r,
+  /etc/redis/ r,
+  /etc/redis/** r,
+  /usr/local/etc/redis/ r,
+  /usr/local/etc/redis/** r,
+
+  # Runtime and temporary files
+  /var/run/postgresql/ rw,
+  /var/run/postgresql/** rw,
+  /var/run/redis/ rw,
+  /var/run/redis/** rw,
+  /tmp/ rw,
+  /tmp/** rw,
+  /var/tmp/ rw,
+  /var/tmp/** rw,
+
+  # Logs
+  /var/log/postgresql/ rw,
+  /var/log/postgresql/** rw,
+  /var/log/redis/ rw,
+  /var/log/redis/** rw,
+
+  # System libraries
+  /lib/** r,
+  /lib64/** r,
+  /usr/lib/** r,
+  /usr/lib64/** r,
+  /usr/share/postgresql/** r,
+  /usr/share/redis/** r,
+
+  # Proc access (limited)
+  @{PROC}/cpuinfo r,
+  @{PROC}/meminfo r,
+  @{PROC}/stat r,
+  @{PROC}/sys/kernel/ostype r,
+  @{PROC}/self/stat r,
+  @{PROC}/self/status r,
+
+  # System information
+  /etc/hosts r,
+  /etc/nsswitch.conf r,
+  /etc/passwd r,
+  /etc/group r,
+  /etc/timezone r,
+  /etc/localtime r,
+
+  # Deny sensitive areas
+  deny /boot/** rwklx,
+  deny /etc/shadow rwklx,
+  deny /root/** rwklx,
+  deny /home/** rwklx,
+  deny @{PROC}/kcore r,
+  deny @{PROC}/kallsyms r,
+  deny /sys/firmware/** rwklx,
+  deny mount,
+  deny umount,
+}

@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: secret-rotation-sa
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: service-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-rotation-role
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: rbac
+rules:
+# Secrets management
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+# ConfigMaps for backup storage
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+# Events for audit logging
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+# Pods for status monitoring
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+# Jobs for rotation execution
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: secret-rotation-binding
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: secret-rotation-sa
+  namespace: gameforge-security
+roleRef:
+  kind: ClusterRole
+  name: secret-rotation-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: monitoring-sa
+  namespace: gameforge-monitoring
+  labels:
+    app.kubernetes.io/name: gameforge-monitoring
+    app.kubernetes.io/component: service-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: monitoring-role
+  labels:
+    app.kubernetes.io/name: gameforge-monitoring
+    app.kubernetes.io/component: rbac
+rules:
+# Node metrics collection
+- apiGroups: [""]
+  resources: ["nodes", "nodes/metrics", "nodes/stats", "nodes/proxy"]
+  verbs: ["get", "list", "watch"]
+# Pod and service metrics
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+# Deployment and replicaset metrics
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+# Custom resource metrics
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: monitoring-binding
+  labels:
+    app.kubernetes.io/name: gameforge-monitoring
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: monitoring-sa
+  namespace: gameforge-monitoring
+roleRef:
+  kind: ClusterRole
+  name: monitoring-role
+  apiGroup: rbac.authorization.k8s.io

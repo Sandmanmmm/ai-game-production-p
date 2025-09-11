@@ -1,0 +1,81 @@
+# AWS-specific deployment patches
+# Update resource requests/limits for cloud instances
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameforge-prometheus-prod
+  namespace: gameforge-monitoring
+spec:
+  replicas: 2  # Restore HA in cloud
+  template:
+    spec:
+      containers:
+      - name: prometheus
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+        # Add AWS-specific volume mounts for EBS
+        volumeMounts:
+        - name: prometheus-storage
+          mountPath: /prometheus
+        - name: aws-config
+          mountPath: /etc/aws
+          readOnly: true
+      # Use StatefulSet-like behavior for storage
+      volumes:
+      - name: aws-config
+        configMap:
+          name: aws-config-prod
+      # Node affinity for AWS instance types
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values: ["compute"]
+              - key: kubernetes.io/arch
+                operator: In
+                values: ["amd64"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameforge-grafana-prod
+  namespace: gameforge-monitoring
+spec:
+  replicas: 2  # Restore HA in cloud
+  template:
+    spec:
+      containers:
+      - name: grafana
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        env:
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: aws-config-prod
+              key: AWS_REGION
+        - name: CLOUD_PROVIDER
+          value: "aws"
+      # Node affinity for monitoring nodes
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values: ["monitoring"]

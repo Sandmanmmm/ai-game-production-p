@@ -1,0 +1,58 @@
+# AWS Storage Classes for GameForge Production
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gameforge-storage-fast
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  iops: "3000"
+  throughput: "125"
+  encrypted: "true"
+  fsType: ext4
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gameforge-storage-standard
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+  encrypted: "true"
+  fsType: ext4
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+# Update existing PVCs to use AWS storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gameforge-prometheus-storage-prod
+  namespace: gameforge-monitoring
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: gameforge-storage-fast
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gameforge-grafana-storage-prod
+  namespace: gameforge-monitoring
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: gameforge-storage-standard
+  resources:
+    requests:
+      storage: 50Gi

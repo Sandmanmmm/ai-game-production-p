@@ -1,0 +1,441 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: secret-rotation-internal
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: cronjob
+    secret-type: internal
+spec:
+  # Daily at 1:00 AM UTC
+  schedule: "0 1 * * *"
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 300
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 1800  # 30 minutes
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: gameforge-secret-rotation
+            app.kubernetes.io/component: job
+            secret-type: internal
+        spec:
+          serviceAccountName: secret-rotation-sa
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+          containers:
+          - name: secret-rotation
+            image: gameforge/secret-rotation:latest
+            imagePullPolicy: Always
+            command: ["pwsh", "/app/scripts/k8s-rotation-wrapper.ps1"]
+            args: ["-SecretType", "internal"]
+            env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_ADDR
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-addr
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-token
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-credentials
+                  key: slack-webhook-url
+                  optional: true
+            volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: vault-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+            - name: notification-secrets
+              mountPath: /notifications
+              readOnly: true
+            - name: temp-storage
+              mountPath: /app/temp
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+            livenessProbe:
+              exec:
+                command:
+                - pwsh
+                - -c
+                - "Test-Path '/app/state/health.txt'"
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 10
+              failureThreshold: 3
+          volumes:
+          - name: config
+            configMap:
+              name: secret-rotation-config
+          - name: vault-secrets
+            secret:
+              secretName: vault-credentials
+          - name: notification-secrets
+            secret:
+              secretName: notification-credentials
+              optional: true
+          - name: temp-storage
+            emptyDir: {}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: secret-rotation-application
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: cronjob
+    secret-type: application
+spec:
+  # Every 45 days at 3:00 AM UTC (approximate with monthly schedule)
+  schedule: "0 3 1,15 * *"  # 1st and 15th of each month
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 10
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 3600  # 1 hour
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: gameforge-secret-rotation
+            app.kubernetes.io/component: job
+            secret-type: application
+        spec:
+          serviceAccountName: secret-rotation-sa
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+          containers:
+          - name: secret-rotation
+            image: gameforge/secret-rotation:latest
+            imagePullPolicy: Always
+            command: ["pwsh", "/app/scripts/k8s-rotation-wrapper.ps1"]
+            args: ["-SecretType", "application"]
+            env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_ADDR
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-addr
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-token
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-credentials
+                  key: slack-webhook-url
+                  optional: true
+            volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: vault-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+            - name: notification-secrets
+              mountPath: /notifications
+              readOnly: true
+            - name: temp-storage
+              mountPath: /app/temp
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+            livenessProbe:
+              exec:
+                command:
+                - pwsh
+                - -c
+                - "Test-Path '/app/state/health.txt'"
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 10
+              failureThreshold: 3
+          volumes:
+          - name: config
+            configMap:
+              name: secret-rotation-config
+          - name: vault-secrets
+            secret:
+              secretName: vault-credentials
+          - name: notification-secrets
+            secret:
+              secretName: notification-credentials
+              optional: true
+          - name: temp-storage
+            emptyDir: {}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: secret-rotation-tls
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: cronjob
+    secret-type: tls
+spec:
+  # Every 60 days at 4:00 AM UTC (approximate with bi-monthly schedule)
+  schedule: "0 4 1,30 * *"  # 1st and 30th of each month
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 10
+  startingDeadlineSeconds: 600
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 3600  # 1 hour
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: gameforge-secret-rotation
+            app.kubernetes.io/component: job
+            secret-type: tls
+        spec:
+          serviceAccountName: secret-rotation-sa
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+          containers:
+          - name: secret-rotation
+            image: gameforge/secret-rotation:latest
+            imagePullPolicy: Always
+            command: ["pwsh", "/app/scripts/k8s-rotation-wrapper.ps1"]
+            args: ["-SecretType", "tls"]
+            env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_ADDR
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-addr
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-token
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-credentials
+                  key: slack-webhook-url
+                  optional: true
+            volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: vault-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+            - name: notification-secrets
+              mountPath: /notifications
+              readOnly: true
+            - name: temp-storage
+              mountPath: /app/temp
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "200m"
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+            livenessProbe:
+              exec:
+                command:
+                - pwsh
+                - -c
+                - "Test-Path '/app/state/health.txt'"
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 10
+              failureThreshold: 3
+          volumes:
+          - name: config
+            configMap:
+              name: secret-rotation-config
+          - name: vault-secrets
+            secret:
+              secretName: vault-credentials
+          - name: notification-secrets
+            secret:
+              secretName: notification-credentials
+              optional: true
+          - name: temp-storage
+            emptyDir: {}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: secret-rotation-database
+  namespace: gameforge-security
+  labels:
+    app.kubernetes.io/name: gameforge-secret-rotation
+    app.kubernetes.io/component: cronjob
+    secret-type: database
+spec:
+  # Every 90 days at 5:00 AM UTC (quarterly)
+  schedule: "0 5 1 1,4,7,10 *"  # Quarterly: Jan 1, Apr 1, Jul 1, Oct 1
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 20
+  startingDeadlineSeconds: 3600
+  jobTemplate:
+    spec:
+      backoffLimit: 1  # Database rotations should be manual
+      activeDeadlineSeconds: 7200  # 2 hours
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: gameforge-secret-rotation
+            app.kubernetes.io/component: job
+            secret-type: database
+        spec:
+          serviceAccountName: secret-rotation-sa
+          restartPolicy: Never  # Don't retry database rotations automatically
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            fsGroup: 1001
+          containers:
+          - name: secret-rotation
+            image: gameforge/secret-rotation:latest
+            imagePullPolicy: Always
+            command: ["pwsh", "/app/scripts/k8s-rotation-wrapper.ps1"]
+            args: ["-SecretType", "database", "-DryRun"]  # Dry run only for databases
+            env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_ADDR
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-addr
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-credentials
+                  key: vault-token
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-credentials
+                  key: slack-webhook-url
+                  optional: true
+            - name: PAGERDUTY_INTEGRATION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notification-credentials
+                  key: pagerduty-key
+                  optional: true
+            volumeMounts:
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            - name: vault-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+            - name: notification-secrets
+              mountPath: /notifications
+              readOnly: true
+            - name: temp-storage
+              mountPath: /app/temp
+            resources:
+              requests:
+                memory: "1Gi"
+                cpu: "500m"
+              limits:
+                memory: "2Gi"
+                cpu: "2000m"
+            livenessProbe:
+              exec:
+                command:
+                - pwsh
+                - -c
+                - "Test-Path '/app/state/health.txt'"
+              initialDelaySeconds: 30
+              periodSeconds: 30
+              timeoutSeconds: 10
+              failureThreshold: 3
+          volumes:
+          - name: config
+            configMap:
+              name: secret-rotation-config
+          - name: vault-secrets
+            secret:
+              secretName: vault-credentials
+          - name: notification-secrets
+            secret:
+              secretName: notification-credentials
+              optional: true
+          - name: temp-storage
+            emptyDir: {}

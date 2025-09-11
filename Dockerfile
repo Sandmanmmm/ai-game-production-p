@@ -1,3 +1,7 @@
+﻿# Reproducible build arguments
+ARG BUILD_DATE
+ARG VCS_REF  
+ARG BUILD_VERSION
 # GameForge Production API Dockerfile
 FROM nvidia/cuda:12.1-devel-ubuntu22.04
 
@@ -39,3 +43,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 # Run the application
 CMD ["uvicorn", "gameforge_production_server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+

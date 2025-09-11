@@ -1,0 +1,122 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: gameforge-secret-rotation-development
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    development.gameforge.com/deployment-tier: "development"
+
+# Base configuration
+bases:
+- ../../base
+
+# Development namespace
+namespace: gameforge-dev
+
+# Development-specific labels
+commonLabels:
+  environment: development
+  tier: development
+  
+# Development annotations
+commonAnnotations:
+  deployment.kubernetes.io/environment: "development"
+
+# Name suffix for development
+nameSuffix: -dev
+
+# Development image tags (latest for rapid iteration)
+images:
+- name: gameforge/secret-rotation
+  newTag: latest
+- name: gameforge/security-monitor
+  newTag: latest
+
+# Development replica counts (minimal)
+replicas:
+- name: prometheus
+  count: 1
+- name: grafana
+  count: 1
+
+# Development configuration
+configMapGenerator:
+- name: development-config
+  literals:
+  - environment=development
+  - log_level=DEBUG
+  - enable_debug=true
+  - vault_max_retries=1
+  - rotation_timeout=300
+  - monitoring_interval=120
+  - disable_alerts=true
+  options:
+    disableNameSuffixHash: false
+
+# Development patches - minimal resources
+patchesJson6902:
+# Minimal resources for development
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: prometheus
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: 256Mi
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 512Mi
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/cpu
+      value: 100m
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/cpu
+      value: 500m
+
+# Development CronJob - very frequent for testing
+- target:
+    group: batch
+    version: v1
+    kind: CronJob
+    name: secret-rotation-internal
+    namespace: gameforge-security
+  patch: |-
+    - op: replace
+      path: /spec/schedule
+      value: "*/5 * * * *"  # Every 5 minutes for rapid testing
+
+# Development storage - minimal
+- target:
+    group: v1
+    kind: PersistentVolumeClaim
+    name: prometheus-storage
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: 5Gi
+
+- target:
+    group: v1
+    kind: PersistentVolumeClaim
+    name: grafana-storage
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/resources/requests/storage
+      value: 2Gi
+
+# Development service - NodePort for local access
+- target:
+    group: v1
+    kind: Service
+    name: grafana
+    namespace: gameforge-monitoring
+  patch: |-
+    - op: replace
+      path: /spec/type
+      value: NodePort

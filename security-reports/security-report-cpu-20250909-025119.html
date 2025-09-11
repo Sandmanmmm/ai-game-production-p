@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>GameForge Security Report - gameforge:phase3-test-cpu</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .header { background-color: #2c3e50; color: white; padding: 20px; border-radius: 5px; }
+        .section { background-color: white; margin: 20px 0; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .pass { color: #27ae60; font-weight: bold; }
+        .fail { color: #e74c3c; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #34495e; color: white; }
+        .metric { display: inline-block; margin: 10px 20px; }
+        .metric-value { font-size: 24px; font-weight: bold; }
+        .metric-label { color: #7f8c8d; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 GameForge Security Report</h1>
+        <p>Image: gameforge:phase3-test-cpu</p>
+        <p>Generated: 2025-09-09 02:51:19</p>
+    </div>
+    
+    <div class="section">
+        <h2>📊 Executive Summary</h2>
+        <div class="metric">
+            <div class="metric-value fail">
+                FAIL
+            </div>
+            <div class="metric-label">Vulnerability Scan</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">0</div>
+            <div class="metric-label">Critical Issues</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">0</div>
+            <div class="metric-label">High Issues</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value warning">
+                UNSIGNED
+            </div>
+            <div class="metric-label">Image Signature</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📋 Software Bill of Materials (SBOM)</h2>
+        <p>Generated SBOMs:</p>
+        <ul>        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>🔍 Vulnerability Scan Results</h2>
+        <table>
+            <tr>
+                <th>Severity</th>
+                <th>Count</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>CRITICAL</td>
+                <td>0</td>
+                <td class="pass">
+                    ✅ PASS
+                </td>
+            </tr>
+            <tr>
+                <td>HIGH</td>
+                <td>0</td>
+                <td class="pass">
+                    ✅ PASS
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>✍️ Image Signature</h2>
+        <p>Status: <span class="warning">
+            ⚠️ Image is not signed
+        </span></p>
+    </div>
+    
+    <div class="section">
+        <h2>📝 Recommendations</h2>
+        <ul>            <li>Sign image before pushing to production registry</li>
+            <li>Implement regular security scanning in CI/CD pipeline</li>
+            <li>Monitor for new vulnerabilities in production</li>
+        </ul>
+    </div>
+</body>
+</html>

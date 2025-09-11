@@ -1,0 +1,5 @@
+# This directory contains Software Bill of Materials (SBOM) files
+# Generated during the build process to track dependencies and security compliance
+
+*.json files contain machine-readable SBOM data
+*.txt files contain human-readable summaries

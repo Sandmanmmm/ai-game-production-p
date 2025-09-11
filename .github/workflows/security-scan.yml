@@ -1,0 +1,175 @@
+name: Security Scanning Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Static Code Analysis
+  sast-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript, python
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+      - name: SemGrep SAST Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+
+      - name: Snyk Code Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # Dependency Scanning
+  dependency-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Snyk Dependency Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --severity-threshold=medium
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'GameForge'
+          path: '.'
+          format: 'ALL'
+
+      - name: Upload Dependency Check Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: reports/
+
+  # Container Image Scanning
+  container-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Run Trivy Container Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy Results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run Grype Container Scan
+        uses: anchore/scan-action@v3
+        with:
+          image: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          fail-build: true
+          severity-cutoff: high
+
+      - name: Docker Scout CVE Analysis
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          sarif-file: scout-results.sarif
+
+  # Infrastructure as Code Scanning
+  iac-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov IaC Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,docker_compose,kubernetes
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+
+      - name: Run Terrascan
+        uses: tenable/terrascan-action@main
+        with:
+          iac_type: 'docker'
+          iac_version: 'v1'
+          policy_type: 'all'
+          only_warn: true
+
+      - name: Upload IaC Scan Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: checkov-results.sarif
+
+  # Security Gate Check
+  security-gate:
+    runs-on: ubuntu-latest
+    needs: [sast-analysis, dependency-scan, container-scan, iac-scan]
+    steps:
+      - name: Security Gate Check
+        run: |
+          echo "Performing security gate validation..."
+          # Check for critical vulnerabilities
+          CRITICAL_COUNT=$(cat reports/security-summary.json | jq '.critical // 0')
+          HIGH_COUNT=$(cat reports/security-summary.json | jq '.high // 0')
+
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "CRITICAL: Found $CRITICAL_COUNT critical vulnerabilities. Deployment blocked."
+            exit 1
+          fi
+
+          if [ "$HIGH_COUNT" -gt 5 ]; then
+            echo "WARNING: Found $HIGH_COUNT high vulnerabilities. Review required."
+            exit 1
+          fi
+
+          echo "Security gate passed. Ready for deployment."
+
+  # Deploy if Security Gate Passes
+  deploy:
+    runs-on: ubuntu-latest
+    needs: security-gate
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Production
+        run: |
+          echo "Deploying secure image to production..."
+          # Add your deployment logic here
